@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bingo Star Online</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#8B1A1A"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Bingo Star"/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;min-height:100vh;
+  background:linear-gradient(160deg,#FFF3DC 0%,#FFE8C0 50%,#FFF0E0 100%);color:#3D1A00}
+.fk{font-family:'Fredoka One',cursive}
+.rbow{background:linear-gradient(90deg,#F5C842,#FFDE7A,#F5C842,#D4A017);
+  background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:rsh 4s linear infinite}
+@keyframes rsh{0%{background-position:0%}100%{background-position:200%}}
+
+/* SCREENS */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.loginWrap{max-width:420px;width:100%;text-align:center}
+.loginCard{background:#FFFAF0;border-radius:24px;padding:28px;
+  border:3px solid #E8C870;box-shadow:0 6px 28px rgba(139,26,26,.14)}
+.loginRole{padding:18px 12px;border-radius:16px;border:3px solid transparent;
+  cursor:pointer;transition:all .2s;background:#FFF3DC;font-weight:900;font-size:15px}
+.loginRole.sel{border-color:#8B1A1A;background:#FFF0E0;box-shadow:0 0 0 3px rgba(139,26,26,.15)}
+.loginRole .icon{font-size:36px;display:block;margin-bottom:6px}
+
+/* ── HEADER ── */
+.appHeader{background:linear-gradient(135deg,#7B0D0D,#9B1515);
+  border-bottom:4px solid #F5C842;box-shadow:0 4px 20px rgba(0,0,0,.35);
+  position:sticky;top:0;z-index:200}
+.hinner{max-width:1200px;margin:0 auto;padding:10px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hlogo{width:52px;height:52px;border-radius:50%;border:3px solid #F5C842;
+  background:radial-gradient(circle at 35% 30%,#FFE9A8,#F5C842 45%,#B8860B 100%);
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.htitle{color:#F5C842;font-size:clamp(14px,3vw,22px);line-height:1.1}
+.hsub{color:rgba(255,220,100,.8);font-size:10px;margin-top:1px}
+.badge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800;
+  background:rgba(255,255,255,.15);color:#FFE082;border:1px solid rgba(255,255,255,.2)}
+.hbtn{padding:7px 14px;border-radius:99px;border:2px solid #F5C842;
+  background:rgba(245,200,66,.15);color:#F5C842;font-weight:800;font-size:12px;
+  cursor:pointer;font-family:'Nunito',sans-serif;transition:background .2s}
+.hbtn:hover{background:rgba(245,200,66,.3)}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1200px;margin:0 auto;padding:18px 16px}
+.g2{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:760px){.g2{grid-template-columns:1fr}}
+.card{background:#FFFAF0;border-radius:18px;padding:18px;margin-bottom:14px;
+  border:2px solid #E8C870;box-shadow:0 3px 16px rgba(139,26,26,.1)}
+.stitle{font-size:17px;font-weight:900;color:#8B1A1A;margin-bottom:12px;
+  padding-bottom:8px;border-bottom:2px dashed #E8C870;display:flex;align-items:center;gap:6px}
+
+/* ── BUTTONS ── */
+.btn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:900;
+  border-radius:12px;padding:11px 18px;font-size:14px;
+  transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.18)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.38;pointer-events:none;transform:none;box-shadow:none}
+.bg{background:linear-gradient(135deg,#2E7D32,#43A047);color:#fff}
+.bo{background:linear-gradient(135deg,#E65100,#FB8C00);color:#fff}
+.br{background:linear-gradient(135deg,#8B1A1A,#C0392B);color:#fff}
+.bt{background:linear-gradient(135deg,#00695C,#26A69A);color:#fff}
+.bd{background:linear-gradient(135deg,#D4A017,#C8900A);color:#fff}
+.brb{color:#fff;border:2px solid #F5C842;
+  background:linear-gradient(90deg,#8B1A1A,#C0392B,#F5C842,#C0392B,#8B1A1A);
+  background-size:200%;animation:rsh 3s linear infinite}
+
+/* ── INPUTS ── */
+.inp{width:100%;background:#FFF8EC;border:2px solid #E8C870;border-radius:11px;
+  padding:10px 14px;color:#3D1A00;font-size:14px;outline:none;
+  font-family:'Nunito',sans-serif;font-weight:700;margin-bottom:10px;transition:border-color .2s}
+.inp:focus{border-color:#8B1A1A}
+.inp::placeholder{color:#C8A060;font-weight:600}
+.lbl{display:block;font-size:12px;font-weight:800;color:#5C2800;margin-bottom:4px}
+.sel{width:100%;background:#FFF8EC;border:2px solid #E8C870;border-radius:11px;
+  padding:10px 14px;color:#3D1A00;font-size:14px;outline:none;
+  font-family:'Nunito',sans-serif;font-weight:700;margin-bottom:10px;cursor:pointer}
+.sel:focus{border-color:#8B1A1A}
+
+/* ── PM BOX ── */
+.pmbox{background:linear-gradient(135deg,#004D40,#00695C);border-radius:16px;
+  padding:16px;border:2px solid #F5C842;box-shadow:0 4px 18px rgba(0,77,64,.3)}
+.pmtit{font-size:10px;color:rgba(255,255,255,.65);font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.pmval{font-size:15px;font-weight:900;color:#FFEB3B}
+
+/* ── CALCULATOR ── */
+.calc-box{background:linear-gradient(135deg,#FFF9E6,#FFF3DC);border-radius:18px;
+  padding:18px;border:3px solid #E8C870;margin-bottom:14px;
+  box-shadow:0 3px 16px rgba(139,26,26,.1)}
+.calc-result{background:linear-gradient(135deg,#004D40,#00695C);
+  border-radius:14px;padding:14px;text-align:center;margin-top:12px}
+.counter-box{background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:14px;
+  padding:12px 16px;text-align:center;margin-bottom:12px;border:2px solid #F5C842}
+
+/* ── TOMBOLA ── */
+@keyframes spinroll{
+  0%{transform:translateY(-200%) scale(.5);opacity:0}
+  30%{transform:translateY(20%) scale(1.15);opacity:1}
+  55%{transform:translateY(-10%) scale(.95)}
+  75%{transform:translateY(5%) scale(1.05)}
+  100%{transform:translateY(0) scale(1);opacity:1}}
+.spin-in{animation:spinroll .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes glowp{
+  0%,100%{box-shadow:0 0 28px var(--gc,#D4A017),0 0 0 5px rgba(212,160,23,.18)}
+  50%{box-shadow:0 0 60px var(--gc,#8B1A1A),0 0 0 8px rgba(139,26,26,.15)}}
+.bglw{animation:glowp 2s ease-in-out infinite}
+@keyframes ping{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.4)}}
+.pring{position:absolute;top:4px;right:calc(50% - 50px);
+  width:11px;height:11px;border-radius:50%;background:#43A047}
+.pring::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:inherit;animation:ping 1.2s ease-out infinite}
+
+/* ── BLOCKED OVERLAY ── */
+.blocked-overlay{position:absolute;inset:0;border-radius:20px;
+  background:rgba(139,26,26,.88);backdrop-filter:blur(4px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:10;padding:24px;text-align:center}
+
+/* ── BINGO CARD ── */
+.cell{height:38px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;font-size:13px;font-weight:900;
+  background:#F5E8D0;color:#8B5E00;border:1px solid #E8C870;transition:background .25s,color .25s}
+.cell.cfree{background:linear-gradient(135deg,#1E88E5,#8E24AA);
+  color:#fff;border:none;font-size:10px;font-weight:900}
+.cell.con{background:linear-gradient(135deg,#8B1A1A,#E53935);color:#fff;border:none;
+  box-shadow:0 0 10px rgba(229,57,53,.4)}
+@keyframes cwin{0%,100%{background:linear-gradient(135deg,#D4A017,#FB8C00)}
+  50%{background:linear-gradient(135deg,#8B1A1A,#E53935)}}
+.cell.cwin{animation:cwin .5s ease infinite;color:#fff;border:none}
+.bingo-card{box-sizing:border-box}
+@media(max-width:760px){
+  .bingo-card{max-width:185px!important;padding:8px!important;border-radius:14px!important}
+  .bingo-card .bingo-head{height:28px!important;font-size:13px!important;border-radius:5px!important}
+  .bingo-card .cell{height:28px!important;border-radius:5px!important;font-size:10px!important}
+  .bingo-card .cell.cfree{font-size:7px!important}
+}
+
+/* ── TOGGLE ── */
+.tog{width:50px;height:27px;border-radius:14px;cursor:pointer;position:relative;
+  display:inline-block;border:2px solid rgba(255,255,255,.25);transition:background .2s}
+.togdot{width:21px;height:21px;background:#fff;border-radius:50%;
+  position:absolute;top:1px;transition:left .2s;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+
+/* ── MODALS ── */
+.moverlay{position:fixed;inset:0;background:rgba(61,26,0,.82);
+  backdrop-filter:blur(8px);z-index:500;
+  display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+@keyframes mup{0%{transform:translateY(24px) scale(.95);opacity:0}
+  100%{transform:translateY(0) scale(1);opacity:1}}
+.mbox{animation:mup .4s cubic-bezier(.34,1.56,.64,1);background:#FFFAF0;
+  border-radius:24px;padding:26px;max-width:480px;width:100%;margin:auto;
+  border:3px solid #E8C870;box-shadow:0 8px 40px rgba(139,26,26,.4)}
+
+/* ── CONFETTI ── */
+#conf{position:fixed;inset:0;pointer-events:none;z-index:600;overflow:hidden}
+@keyframes cfall{0%{transform:translateY(-20px) rotate(0);opacity:1}
+  100%{transform:translateY(108vh) rotate(900deg);opacity:0}}
+
+/* ── TABLES ── */
+.rtbl{width:100%;border-collapse:collapse;font-size:12px}
+.rtbl th{background:#8B1A1A;color:#fff;padding:7px 9px;text-align:left}
+.rtbl td{padding:7px 9px;border-bottom:1px solid #EDD9AA;color:#3D1A00}
+.rtbl tr:hover td{background:#FFF0D0}
+.htbl th{background:#D4A017}
+
+/* ── ROUND PILLS ── */
+.rpill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;
+  font-weight:800;font-size:12px;margin:3px;cursor:default}
+.rpill.done{background:#E8F5E9;border:2px solid #43A047;color:#2E7D32}
+.rpill.active{background:linear-gradient(135deg,#8B1A1A,#E53935);border:2px solid #F5C842;color:#fff;
+  box-shadow:0 0 12px rgba(139,26,26,.4)}
+.rpill.pending{background:#FFF3DC;border:2px dashed #E8C870;color:#8B5E00}
+
+/* ── MISC ── */
+#pNotice,#aNotice{position:fixed;top:12px;left:12px;right:12px;z-index:900;max-width:480px;margin:0 auto}
+.notice{border-radius:12px;padding:11px 16px;margin-bottom:12px;font-weight:800;font-size:13px;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.sep{height:1px;background:#EDD9AA;margin:8px 0}
+input[type=range]{width:100%;accent-color:#8B1A1A;margin-bottom:8px}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:linear-gradient(#8B1A1A,#D4A017);border-radius:3px}
+.rnd-cfg{background:#FFF3DC;border:2px solid #E8C870;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.mode-chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;
+  background:#FFF3DC;border:1px solid #E8C870;color:#5C2800;margin:2px}
+.mode-chip.sel{background:#8B1A1A;color:#fff;border-color:#8B1A1A}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="loginWrap">
+    <div style="font-size:90px;margin-bottom:6px">⭐</div>
+    <h1 class="fk rbow" style="font-size:clamp(28px,6vw,42px);line-height:1.1;margin-bottom:4px">Bingo Star Online</h1>
+    <p class="fk" style="color:#D4A017;font-size:18px;margin-bottom:4px">Tradicional</p>
+    <div class="loginCard">
+      <button class="btn brb fk" style="width:100%;padding:22px;font-size:28px;border-radius:18px;letter-spacing:.5px" onclick="doLogin()">🎱 ¡Entrar al Juego!</button>
+      <button id="btnInstalarApp" style="display:none;width:100%;margin-top:12px;padding:13px;font-size:14px;border-radius:14px;border:2px solid #8B1A1A;background:#FFF3DC;color:#8B1A1A;font-weight:800;cursor:pointer" onclick="instalarApp()">📲 Instalar App en tu celular</button>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ══ MODAL INSTRUCCIONES DE INSTALACIÓN (iOS / navegadores sin soporte) ══ -->
+<div id="installMod" class="moverlay" style="display:none">
+  <div class="mbox" style="max-width:380px;text-align:left">
+    <div id="installModContent"></div>
+    <button class="btn br fk" style="width:100%;margin-top:14px" onclick="document.getElementById('installMod').style.display='none'">Entendido</button>
+  </div>
+</div>
+
+<!-- ══ PLAYER SCREEN ══════════════════════════════════════ -->
+<div id="playerScreen" class="screen">
+  <header class="appHeader">
+    <div class="hinner">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="hlogo">⭐</div>
+        <div>
+          <div class="fk htitle">Bingo Star Online</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="pBadge" class="badge">⚪ Esperando</span>
+        <button class="hbtn" onclick="logout()">↩ Salir</button>
+      </div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div id="pNotice"></div>
+    <div class="g2">
+      <div>
+        <div id="pCardCounter" class="counter-box" style="display:none"></div>
+        <div id="pCalc" class="calc-box"></div>
+        <div id="pPMBox" class="card"></div>
+        <div id="pTomb" class="card"></div>
+        <div id="pModes" class="card"></div>
+        <div id="pPot" class="card" style="display:none"></div>
+        <div id="pPlayerList" class="card"></div>
+      </div>
+      <div id="pRight" style="position:relative"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN SCREEN ═══════════════════════════════════════ -->
+<div id="adminScreen" class="screen">
+  <header class="appHeader">
+    <div class="hinner">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="hlogo" style="background:linear-gradient(135deg,#D4A017,#8B1A1A)">🔧</div>
+        <div>
+          <div class="fk htitle">Panel de Administración</div>
+          <div class="hsub">Bingo Star Online</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="aBadge" class="badge">⚪ Esperando</span>
+        <button class="hbtn" onclick="logout()">↩ Salir</button>
+      </div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div id="aNotice"></div>
+    <div class="g2">
+      <div id="aLeft"></div>
+      <div>
+        <div id="aTomb" class="card"></div>
+        <div id="aRefs" class="card"></div>
+        <div id="aHistory" class="card"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL REGISTRO ════════════════════════════════════ -->
+<div id="regMod" class="moverlay" style="display:none">
+  <div class="mbox">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:52px">⭐</div>
+      <h2 class="fk rbow" style="font-size:28px;margin-top:4px">Reserva tu Cartón</h2>
+    </div>
+    <div id="regPM" class="pmbox" style="margin-bottom:12px"></div>
+    <p style="text-align:center;color:#D4A017;font-weight:800;font-size:13px;margin:8px 0 12px">★ ★ Realiza el pago y completa tus datos ★ ★</p>
+    <label class="lbl">👤 Nombre</label>
+    <input class="inp" id="rName" placeholder="Tu nombre..."/>
+    <label class="lbl">👤 Apellido</label>
+    <input class="inp" id="rLastName" placeholder="Tu apellido..."/>
+    <label class="lbl">🏦 Teléfono de Pago Móvil (con el que pagaste)</label>
+    <input class="inp" id="rPmPhone" type="tel" placeholder="04XX-XXXXXXX" oninput="syncWaFromPm()"/>
+    <label class="lbl" style="display:flex;align-items:center;gap:6px">
+      <input type="checkbox" id="rSameWa" checked onchange="syncWaFromPm()" style="width:16px;height:16px"/>
+      Mi WhatsApp es el mismo número
+    </label>
+    <div id="rWaWrap" style="display:none">
+      <label class="lbl">📱 Celular WhatsApp (para contactarte)</label>
+      <input class="inp" id="rPhone" type="tel" placeholder="04XX-XXXXXXX"/>
+    </div>
+    <label class="lbl">🔢 Últimos 8 dígitos de la referencia</label>
+    <input class="inp" id="rRef" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/\D/g,'').slice(0,8);updCost()"/>
+    <label class="lbl">🃏 Cantidad de cartones</label>
+    <input class="inp" id="rQty" type="number" min="1" value="1" oninput="updCost()"/>
+    <label class="lbl">💵 Monto que pagaste (Bs.)</label>
+    <input class="inp" id="rMontoPagado" type="number" min="0" step="0.01" placeholder="Ej: 50.00"/>
+    <label class="lbl">📸 Foto del comprobante de pago</label>
+    <div id="imgDropArea" ondrop="handleImgDrop(event)" ondragover="event.preventDefault()" onclick="document.getElementById('rImg').click()"
+      style="border:2px dashed #E8C870;border-radius:12px;padding:14px;text-align:center;margin-bottom:14px;cursor:pointer;background:#FFFAF0">
+      <input type="file" id="rImg" accept="image/*" capture="environment" style="display:none" onchange="previewImg(this)"/>
+      <p id="imgLabel" style="font-size:13px;color:#8B5E00;font-weight:700;margin:0">📎 Toca aquí para adjuntar la captura de tu pago</p>
+      <img id="imgPreview" style="display:none;max-width:100%;max-height:160px;border-radius:8px;margin-top:8px"/>
+    </div>
+    <div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border-radius:12px;padding:12px 14px;margin-bottom:14px;border:2px solid #43A047">
+      <p style="font-size:12px;font-weight:700;color:#1B5E20;margin-bottom:4px">💰 Total a cancelar:</p>
+      <p id="rTotal" class="fk" style="font-size:26px;font-weight:900;color:#1B5E20">Bs. 0,00</p>
+      <p id="rAvail" style="font-size:12px;color:#2E7D32;font-weight:700;margin-top:2px"></p>
+    </div>
+    <button class="btn brb" style="width:100%;padding:14px;font-size:17px;border-radius:14px" onclick="doRegister()">✅ Enviar Reserva</button>
+    <div style="background:#FFF3DC;border:2px solid #E8C870;border-radius:10px;padding:8px 12px;margin-bottom:8px;text-align:center">
+      <p style="font-size:12px;color:#8B5E00;font-weight:700">⏳ Tu reserva permanecerá pendiente hasta que sea aprobada o rechazada manualmente <b id="regTimer" style="color:#8B5E00">PENDIENTE</b></p>
+    </div>
+    <button style="width:100%;margin-top:4px;padding:8px;border:none;background:transparent;color:#8B5E00;font-size:13px;cursor:pointer;font-weight:700" onclick="closeReg()">✗ Cancelar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL GANADOR ══════════════════════════════════════ -->
+<div id="winMod" class="moverlay" style="display:none">
+  <div class="mbox" style="text-align:center;border-color:#F5C842;box-shadow:0 0 60px rgba(212,160,23,.35)">
+    <div style="font-size:64px">🏆</div>
+    <h2 class="fk rbow" style="font-size:48px;line-height:1">¡BINGO!</h2>
+    <div id="winContent"></div>
+    <button class="btn brb" style="width:100%;padding:14px;font-size:17px;border-radius:14px;margin-top:14px" onclick="nextRound()">🎊 Continuar</button>
+  </div>
+</div>
+
+<div id="conf"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// ── SUPABASE CONFIG ──────────────────────────────────────
+// Pega aquí tu Project URL y tu anon public key (Supabase → Settings → API)
+var SUPABASE_URL = 'https://qmzzsulbqczfhuqvqjyv.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_z8GQzM9I8WKazpRLpU9hrw_tCT2mfo9';
+var sb = (SUPABASE_URL.indexOf('TU-PROYECTO')<0)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null;
+if(!sb) console.warn('⚠️ Bingo Star Online: falta configurar SUPABASE_URL / SUPABASE_KEY en index.html');
+
+var LTRS=['B','I','N','G','O'];
+var RNG={B:[1,15],I:[16,30],N:[31,45],G:[46,60],O:[61,75]};
+var CLR={B:'#1E88E5',I:'#E53935',N:'#FB8C00',G:'#43A047',O:'#8E24AA'};
+var MODE_LABELS={
+  lines:'Línea',corners:'Cuatro Esquinas',full:'Tabla Llena',
+  letter:'Letra X', letraL:'Letra L', letraT:'Letra T'
+};
+
+var G={
+  role:null, selRole:'player',
+  phase:'waiting',
+  called:[], current:null, pool:[],
+  isSpinning:false,
+  sec:8,
+  priceBs:10,
+  cardLimit:300,
+  rounds:[
+    {id:1,name:'Ronda 1',mode:'lines',done:false},
+    {id:2,name:'Ronda 2',mode:'corners',done:false},
+    {id:3,name:'Ronda 3',mode:'full',done:false}
+  ],
+  currentRound:0,
+  pm:{banco:'Tu Banco',tel:'0412-0000000',ci:'V-00000000',nom:'Tu Nombre'},
+  refs:[], players:[], me:null, tc:0,
+  voiceGender:'female', voices:[],
+  history:[],
+  pwd:'star2025',
+  // ── Supabase runtime state ──
+  partidaId:null, rondaIds:[], configId:1,
+  horaInicioProg:null, telegram:{chatId:'',activo:true,minutosAviso:[30,10,5]},
+  dbReady:false, dbBusy:false
+};
+var tmr=null, wf=false;
+var lastSpokenNumber=null;
+var seenGanadorIds={};
+
+// ══════════════════════════════════════════════════════════
+// ── SUPABASE: CARGA INICIAL, TIEMPO REAL Y ESCRITURA ──────
+// ══════════════════════════════════════════════════════════
+var _dbReadyResolve, _dbReadyPromise = new Promise(function(res){_dbReadyResolve=res;});
+function ensureDbReady(){return _dbReadyPromise;}
+
+var DEFAULT_ROUNDS=[
+  {mode:'lines',name:'Ronda 1'},
+  {mode:'corners',name:'Ronda 2'},
+  {mode:'full',name:'Ronda 3'}
+];
+
+async function initApp(){
+  if(!sb){ G.dbReady=false; _dbReadyResolve(); return; }
+  try{
+    await loadConfig();
+    await loadOrCreatePartida();
+    await loadRondas();
+    await loadJugadoresYCartones();
+    await loadDepositos();
+    var existingWinners=await loadGanadores();
+    existingWinners.forEach(function(g){seenGanadorIds[g.id]=true;});
+    lastSpokenNumber=G.current;
+    await loadTelegramConfig();
+    subscribeRealtime();
+    // recuperar sesión de jugador guardada en este navegador
+    var savedPhone=localStorage.getItem('bso_phone');
+    if(savedPhone) tryRecoverByPhone(savedPhone,true);
+    G.dbReady=true;
+  }catch(e){
+    console.error('Error inicializando Bingo Star Online:',e);
+  }
+  _dbReadyResolve();
+  renderBoth();
+}
+
+async function loadConfig(){
+  var r=await sb.from('configuracion').select('*').eq('id',1).maybeSingle();
+  if(r.error||!r.data){
+    await sb.from('configuracion').insert({id:1}).select().maybeSingle();
+    return;
+  }
+  var c=r.data;
+  G.pm={banco:c.pm_banco,tel:c.pm_telefono,ci:c.pm_cedula,nom:c.pm_titular};
+  G.voiceGender=c.voz_genero;
+  G.pwd=c.admin_pwd_hash;
+  G._cfgPriceDefault=parseFloat(c.precio_carton);
+  G._cfgLimitDefault=c.limite_cartones;
+  G._cfgPartidaActivaId=c.partida_activa_id;
+}
+
+async function loadOrCreatePartida(){
+  var p=null;
+  // 1) si ya hay un puntero a la partida activa, úsalo siempre (fuente única de verdad)
+  if(G._cfgPartidaActivaId){
+    var byId=await sb.from('partidas').select('*').eq('id',G._cfgPartidaActivaId).maybeSingle();
+    p=byId.data;
+  }
+  // 2) si no hay puntero (primera vez que alguien abre la app), crea la partida y
+  //    trata de "ganar" el puntero de forma atómica para que dos pestañas abiertas
+  //    a la vez NO terminen creando dos partidas distintas
+  if(!p){
+    var ins=await sb.from('partidas').insert({
+      nombre:'Bingo Star Online',
+      precio_carton:G._cfgPriceDefault||10,
+      limite_cartones:G._cfgLimitDefault||300,
+      intervalo_seg:8
+    }).select().single();
+    var candidata=ins.data;
+    var rondasIns=DEFAULT_ROUNDS.map(function(rd,i){
+      return {partida_id:candidata.id,numero_ronda:i+1,nombre:rd.name,modo:rd.mode};
+    });
+    await sb.from('rondas').insert(rondasIns);
+    // solo gana el puntero si SIGUE en null (evita condición de carrera entre pestañas)
+    var win=await sb.from('configuracion').update({partida_activa_id:candidata.id})
+      .eq('id',1).is('partida_activa_id',null).select().maybeSingle();
+    if(win.data){
+      p=candidata; // esta pestaña ganó, es la partida oficial
+    }else{
+      // otra pestaña/usuario ya creó la partida oficial primero: descarta la nuestra y usa la de ellos
+      await sb.from('rondas').delete().eq('partida_id',candidata.id);
+      await sb.from('partidas').delete().eq('id',candidata.id);
+      var real=await sb.from('configuracion').select('partida_activa_id').eq('id',1).single();
+      var byId2=await sb.from('partidas').select('*').eq('id',real.data.partida_activa_id).maybeSingle();
+      p=byId2.data;
+    }
+  }
+  G.partidaId=p.id;
+  G._cfgPartidaActivaId=p.id;
+  G.phase={esperando:'waiting',jugando:'playing',pausado:'paused',finalizado:'finished'}[p.estado]||'waiting';
+  G.priceBs=parseFloat(p.precio_carton);
+  G.cardLimit=p.limite_cartones;
+  G.sec=p.intervalo_seg;
+  G.tc=p.total_cartones;
+  G.horaInicioProg=p.hora_inicio_prog;
+}
+
+async function loadRondas(){
+  var r=await sb.from('rondas').select('*').eq('partida_id',G.partidaId).order('numero_ronda');
+  var rows=r.data||[];
+  G.rounds=rows.map(function(rd){return {id:rd.id,name:rd.nombre,mode:rd.modo,done:rd.estado==='finalizado',_estado:rd.estado};});
+  var idx=G.rounds.findIndex(function(rd){return rd._estado!=='finalizado';});
+  G.currentRound=idx>=0?idx:Math.max(0,G.rounds.length-1);
+  var cur=rows[G.currentRound];
+  if(cur){
+    G.called=(cur.numeros_cantados||[]).slice();
+    G.current=cur.numero_actual;
+  }else{
+    G.called=[];G.current=null;
+  }
+  G.pool=sh(Array.from({length:75},function(_,i){return i+1;}).filter(function(n){return G.called.indexOf(n)<0;}));
+}
+function curRondaId(){return G.rounds[G.currentRound]?G.rounds[G.currentRound].id:null;}
+
+async function loadJugadoresYCartones(){
+  var rc=await sb.from('cartones').select('*, jugadores(*)').eq('partida_id',G.partidaId);
+  var rows=rc.data||[];
+  var byJug={};
+  rows.forEach(function(c){
+    var j=c.jugadores;if(!j)return;
+    if(!byJug[j.id])byJug[j.id]={id:j.id,name:j.nombre,celular:j.celular,cards:[],cardIds:[],pagado:[]};
+    byJug[j.id].cards.push(c.numeros);
+    byJug[j.id].cardIds.push(c.id);
+    byJug[j.id].pagado.push(c.pagado);
+  });
+  G.players=Object.keys(byJug).map(function(k){return byJug[k];});
+  if(G.me){
+    var upd=G.players.find(function(p){return p.id===G.me.id;});
+    if(upd)G.me=upd; // refrescar cartones del jugador actual
+  }
+}
+
+async function loadDepositos(){
+  var r=await sb.from('depositos').select('*, jugadores(telefono_pago_movil)').eq('partida_id',G.partidaId).order('created_at');
+  G.refs=(r.data||[]).map(function(d){
+    return {id:d.id,nm:d.nombre,ph:d.celular,pm:d.jugadores?d.jugadores.telefono_pago_movil:d.celular,rf:d.referencia,q:d.cantidad_cartones,
+      monto:parseFloat(d.monto_bs),montoDeclarado:d.monto_declarado?parseFloat(d.monto_declarado):null,
+      st:d.estado,ts:new Date(d.created_at).toLocaleTimeString('es-VE'),
+      expAt:new Date(d.expira_at).getTime(),jugadorId:d.jugador_id};
+  });
+}
+
+async function loadGanadores(){
+  var r=await sb.from('ganadores').select('*, rondas(nombre), jugadores(celular)').eq('partida_id',G.partidaId).order('created_at');
+  var rows=r.data||[];
+  G.history=rows.map(function(g){
+    return {rnd:g.rondas?g.rondas.nombre:'Ronda',pat:g.patron,closing:g.numero_cierre,
+      winners:[g.nombre_jugador],celular:g.jugadores?g.jugadores.celular:'',prize:parseFloat(g.premio_bs).toFixed(2),
+      pot:parseFloat(g.bote_total_bs).toFixed(2),ts:new Date(g.created_at).toLocaleTimeString('es-VE'),
+      cnt:g.numeros_cantados_count};
+  });
+  return rows;
+}
+
+async function loadTelegramConfig(){
+  var r=await sb.from('telegram_config').select('*').eq('id',1).maybeSingle();
+  if(r.data){
+    G.telegram={chatId:r.data.chat_id||'',activo:r.data.activo,minutosAviso:r.data.minutos_aviso||[30,10,5]};
+  }
+}
+
+var currentChannel=null;
+function subscribePartidaChannel(){
+  if(currentChannel){sb.removeChannel(currentChannel);currentChannel=null;}
+  currentChannel=sb.channel('bso-'+G.partidaId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'partidas',filter:'id=eq.'+G.partidaId},
+      async function(){await loadOrCreatePartida();renderBoth();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'rondas',filter:'partida_id=eq.'+G.partidaId},
+      async function(){
+        await loadRondas();
+        if(G.current!=null&&G.current!==lastSpokenNumber)spk(G.current);
+        renderBoth();
+      })
+    .on('postgres_changes',{event:'*',schema:'public',table:'cartones',filter:'partida_id=eq.'+G.partidaId},
+      async function(){await loadJugadoresYCartones();renderBoth();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'depositos',filter:'partida_id=eq.'+G.partidaId},
+      async function(){await loadDepositos();renderBoth();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'ganadores',filter:'partida_id=eq.'+G.partidaId},
+      async function(){
+        var rows=await loadGanadores();
+        rows.forEach(function(g){
+          if(!seenGanadorIds[g.id]){
+            seenGanadorIds[g.id]=true;
+            showWin([g.nombre_jugador],g.patron,g.numero_cierre,parseFloat(g.bote_total_bs));
+          }
+        });
+        renderBoth();
+      })
+    .subscribe();
+}
+var configWatchStarted=false;
+function subscribeConfigWatch(){
+  if(configWatchStarted)return; // solo una vez por sesión, sin importar cuántas partidas se creen
+  configWatchStarted=true;
+  sb.channel('bso-config-watch')
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'configuracion',filter:'id=eq.1'},
+      async function(payload){
+        // Detecta cuando el admin abre una PARTIDA NUEVA y cambia a todos los
+        // navegadores conectados (jugadores incluidos) sin que nadie recargue la página.
+        var nuevoId=payload.new&&payload.new.partida_activa_id;
+        if(nuevoId&&nuevoId!==G.partidaId){
+          G._cfgPartidaActivaId=nuevoId;
+          G.players=[];G.me=null;G.refs=[];
+          await loadOrCreatePartida();
+          await loadRondas();
+          await loadJugadoresYCartones();
+          await loadDepositos();
+          var existingWinners=await loadGanadores();
+          existingWinners.forEach(function(g){seenGanadorIds[g.id]=true;});
+          lastSpokenNumber=null;
+          subscribePartidaChannel();
+          renderBoth();
+        }
+      }).subscribe();
+}
+function subscribeRealtime(){
+  subscribePartidaChannel();
+  subscribeConfigWatch();
+}
+
+async function tryRecoverByPhone(phone,silent){
+  var clean=phone.replace(/\D/g,'');
+  var ref=G.refs.find(function(r){return (r.pm||'').replace(/\D/g,'')===clean&&r.st!=='rechazado'&&r.st!=='expirado';});
+  if(!ref)return false;
+  var player=G.players.find(function(p){return p.id===ref.jugadorId;});
+  if(!player)return false;
+  G.me=player;
+  if(!silent)noticeP('✅ Bienvenido de vuelta, '+player.name+'!','#2E7D32');
+  return true;
+}
+
+// ── ROUTING ─────────────────────────────────────────────
+function checkRoute(){
+  if(window.location.hash==='#adminmm') enterAdmin();
+}
+window.addEventListener('hashchange',function(){
+  if(window.location.hash==='#adminmm'&&G.role!=='admin') enterAdmin();
+});
+async function enterAdmin(){
+  await ensureDbReady();
+  if(G.role!=='admin'){
+    var typed=window.prompt('🔐 Contraseña de administrador:');
+    if(typed===null){ window.location.hash=''; return; } // canceló
+    if(typed!==G.pwd){
+      alert('❌ Contraseña incorrecta.');
+      window.location.hash='';
+      return;
+    }
+  }
+  G.role='admin';
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('playerScreen').classList.remove('active');
+  document.getElementById('adminScreen').classList.add('active');
+  renderAdmin();
+}
+
+// ── LOGIN ────────────────────────────────────────────────
+function selRole(r){
+  G.selRole=r;
+  document.getElementById('rPlayer').classList.toggle('sel',r==='player');
+  document.getElementById('rGuest').classList.toggle('sel',r==='guest');
+}
+async function doLogin(){
+  G.role=G.selRole;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('playerScreen').classList.add('active');
+  await ensureDbReady();
+  renderPlayer();
+}
+function logout(){
+  G.role=null; window.location.hash='';
+  document.getElementById('playerScreen').classList.remove('active');
+  document.getElementById('adminScreen').classList.remove('active');
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+// ── VOICES ───────────────────────────────────────────────
+function loadVoices(){
+  if(!window.speechSynthesis)return;
+  G.voices=window.speechSynthesis.getVoices();
+  if(!G.voices.length) window.speechSynthesis.onvoiceschanged=function(){G.voices=window.speechSynthesis.getVoices();};
+}
+function getVoice(){
+  var voices=G.voices.length?G.voices:(window.speechSynthesis?window.speechSynthesis.getVoices():[]);
+  var es=voices.filter(function(v){return v.lang.indexOf('es')===0;});
+  if(!es.length)es=voices; if(!es.length)return null;
+  if(G.voiceGender==='male'){
+    var m=es.find(function(v){return /male|jorge|diego|pablo|carlos|antonio/i.test(v.name);});
+    return m||es[es.length-1];
+  }
+  var f=es.find(function(v){return /female|maria|laura|lucia|monica|paulina/i.test(v.name);});
+  return f||es[0];
+}
+function spk(n){
+  lastSpokenNumber=n;
+  try{
+    if(!window.speechSynthesis)return;
+    var u=new SpeechSynthesisUtterance(lof(n)+'... '+n);
+    u.lang='es-VE';u.rate=.82;u.pitch=G.voiceGender==='male'?0.8:1.2;
+    var v=getVoice();if(v)u.voice=v;
+    window.speechSynthesis.cancel();window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+// ── UTILS ────────────────────────────────────────────────
+function sh(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+function lof(n){return n<=15?'B':n<=30?'I':n<=45?'N':n<=60?'G':'O';}
+function fBs(v){return 'Bs. '+parseFloat(v).toFixed(2).replace('.',',');}
+function cartonsLeft(){return Math.max(0,G.cardLimit-G.tc);}
+
+function gc(){
+  return LTRS.map(function(l){
+    var r=RNG[l],p=[];
+    for(var i=r[0];i<=r[1];i++)p.push(i);
+    var c=sh(p).slice(0,5);
+    if(l==='N')c[2]=0;return c;
+  });
+}
+function ion(card,row,col,ca){if(col===2&&row===2)return true;return ca.indexOf(card[col][row])>=0;}
+
+// ── WIN CHECKERS ─────────────────────────────────────────
+function ckL(card,ca){
+  // Columna izquierda completa + fila inferior completa
+  var leftCol=[0,1,2,3,4].every(function(r){return ion(card,r,0,ca);});
+  var bottomRow=[0,1,2,3,4].every(function(c){return ion(card,4,c,ca);});
+  return leftCol&&bottomRow;
+}
+function ckT(card,ca){
+  // Fila superior completa + columna central completa
+  var topRow=[0,1,2,3,4].every(function(c){return ion(card,0,c,ca);});
+  var midCol=[0,1,2,3,4].every(function(r){return ion(card,r,2,ca);});
+  return topRow&&midCol;
+}
+function ckLine(card,ca){
+  var i;
+  for(i=0;i<5;i++)if([0,1,2,3,4].every(function(c){return ion(card,i,c,ca);}))return true;
+  for(i=0;i<5;i++)if([0,1,2,3,4].every(function(r){return ion(card,r,i,ca);}))return true;
+  if([0,1,2,3,4].every(function(i){return ion(card,i,i,ca);}))return true;
+  if([0,1,2,3,4].every(function(i){return ion(card,i,4-i,ca);}))return true;
+  return false;
+}
+function ckC(card,ca){return ion(card,0,0,ca)&&ion(card,0,4,ca)&&ion(card,4,0,ca)&&ion(card,4,4,ca);}
+function ckF(card,ca){for(var c=0;c<5;c++)for(var r=0;r<5;r++)if(!ion(card,r,c,ca))return false;return true;}
+function ckX(card,ca){
+  return [0,1,2,3,4].every(function(i){return ion(card,i,i,ca);})&&
+         [0,1,2,3,4].every(function(i){return ion(card,i,4-i,ca);});
+}
+function dw(card,ca,mode){
+  if(!card)return null;
+  if(mode==='lines'  &&ckLine(card,ca))return'Línea';
+  if(mode==='corners'&&ckC(card,ca))  return'Cuatro Esquinas';
+  if(mode==='full'   &&ckF(card,ca))  return'Tabla Llena';
+  if(mode==='letter' &&ckX(card,ca))  return'Letra X';
+  if(mode==='letraL' &&ckL(card,ca))  return'Letra L';
+  if(mode==='letraT' &&ckT(card,ca))  return'Letra T';
+  return null;
+}
+function curMode(){
+  if(G.currentRound<0||G.currentRound>=G.rounds.length)return'lines';
+  return G.rounds[G.currentRound].mode;
+}
+
+// ── AUDIO ────────────────────────────────────────────────
+var AC=null;
+function actx(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
+function pRoll(){
+  try{
+    var c=actx(),t=c.currentTime;
+    for(var i=0;i<8;i++){
+      var o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type='triangle';
+      o.frequency.value=80+Math.random()*40;
+      var st=t+i*.08;
+      g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.12,st+.02);
+      g.gain.linearRampToValueAtTime(0,st+.06);o.start(st);o.stop(st+.07);
+    }
+  }catch(e){}
+}
+function pDrop(l){
+  try{
+    var c=actx(),t=c.currentTime,f={B:262,I:294,N:330,G:349,O:392}[l]||330;
+    var o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);o.type='sine';
+    o.frequency.setValueAtTime(f*1.6,t);o.frequency.exponentialRampToValueAtTime(f,t+.25);
+    g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.6);
+    o.start(t);o.stop(t+.6);
+  }catch(e){}
+}
+function pFan(){
+  try{
+    var c=actx();
+    [261,330,392,523,659,784,1046].forEach(function(f,i){
+      var o=c.createOscillator(),g=c.createGain();
+      o.connect(g);g.connect(c.destination);o.type='triangle';o.frequency.value=f;
+      var t=c.currentTime+i*.11;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2,t+.05);
+      g.gain.linearRampToValueAtTime(0,t+.45);o.start(t);o.stop(t+.5);
+    });
+  }catch(e){}
+}
+
+// ── CONFETTI ─────────────────────────────────────────────
+function showConf(){
+  var el=document.getElementById('conf');el.innerHTML='';
+  var cols=['#E53935','#FB8C00','#FDD835','#43A047','#1E88E5','#8E24AA','#FFD700','#D4A017'];
+  for(var i=0;i<90;i++){
+    var d=document.createElement('div');var sz=6+Math.random()*10;
+    d.style.cssText='position:absolute;top:-20px;left:'+(Math.random()*100)+'%;width:'+sz+'px;height:'+sz+'px;background:'+cols[i%8]+';border-radius:'+(i%3===0?'50%':'3px')+';animation:cfall '+(3+Math.random()*4)+'s '+(Math.random()*2.5)+'s linear forwards';
+    el.appendChild(d);
+  }
+  setTimeout(function(){el.innerHTML='';},8500);
+}
+
+// ── GAME ─────────────────────────────────────────────────
+function showSpinAnim(cb){
+  var ballEl=document.getElementById('ballInner');
+  if(!ballEl){cb();return;}
+  var idx=0,nums=[14,37,52,7,63,28,45,19,71,33,8,55,22,68,41];
+  var rollInt=setInterval(function(){
+    var n=nums[idx%nums.length];idx++;var l=lof(n);
+    ballEl.innerHTML='<span style="font-size:16px;line-height:1;display:block">'+l+'</span>'+
+      '<span style="font-size:38px;line-height:1;display:block">'+n+'</span>';
+    ballEl.style.background='radial-gradient(circle at 32% 28%,#fff 0%,'+CLR[l]+' 42%)';
+    ballEl.parentElement.style.borderColor=CLR[l];
+  },90);
+  setTimeout(function(){clearInterval(rollInt);cb();},700);
+}
+function callOne(){
+  if(G.phase!=='playing'||G.isSpinning)return;
+  if(!G.pool.length){setPhase('finished');return;}
+  G.isSpinning=true;pRoll();
+  showSpinAnim(async function(){
+    var n=G.pool.pop();G.called.push(n);G.current=n;G.isSpinning=false;
+    pDrop(lof(n));spk(n);
+    var rid=curRondaId();
+    if(sb&&rid) await sb.from('rondas').update({numeros_cantados:G.called,numero_actual:n}).eq('id',rid);
+    if(!wf){
+      var mode=curMode();var ws=[],pt=null,winCards=[];
+      G.players.forEach(function(p){
+        p.cards.forEach(function(c,i){
+          if(p.pagado&&!p.pagado[i])return; // solo cartones pagados pueden ganar
+          var w=dw(c,G.called,mode);if(w){ws.push(p.name);if(!pt)pt=w;winCards.push({jugadorId:p.id,cartonId:p.cardIds[i]});}
+        });
+      });
+      if(ws.length){
+        wf=true;
+        var un=ws.filter(function(v,i,a){return a.indexOf(v)===i;});
+        var pot=G.tc*G.priceBs*.9;
+        var ea=(pot/Math.max(un.length,1)).toFixed(2);
+        if(sb){
+          var seen={};
+          var rows=winCards.filter(function(w){if(seen[w.jugadorId])return false;seen[w.jugadorId]=1;return true;}).map(function(w){
+            var pName=G.players.find(function(p){return p.id===w.jugadorId;});
+            return {partida_id:G.partidaId,ronda_id:rid,jugador_id:w.jugadorId,carton_id:w.cartonId,
+              nombre_jugador:pName?pName.name:'',patron:pt,numero_cierre:n,
+              numeros_cantados_count:G.called.length,premio_bs:ea,bote_total_bs:pot.toFixed(2)};
+          });
+          if(rows.length) await sb.from('ganadores').insert(rows);
+          await sb.from('rondas').update({estado:'finalizado'}).eq('id',rid);
+          // el modal de ganador lo dispara la suscripción en tiempo real (llega a TODOS: admin y jugadores)
+        }else{
+          setTimeout(function(){showWin(un,pt,n,pot);},400);
+        }
+        setPhase('finished');
+      }
+    }
+    renderBoth();
+  });
+}
+var PHASE_TO_DB={waiting:'esperando',playing:'jugando',paused:'pausado',finished:'finalizado'};
+function setPhase(p){
+  G.phase=p;clearInterval(tmr);
+  if(p==='playing')tmr=setInterval(callOne,G.sec*1000);
+  if(sb&&G.partidaId) sb.from('partidas').update({estado:PHASE_TO_DB[p]}).eq('id',G.partidaId);
+  upBadges();renderBoth();
+}
+function finalizarPartida(){
+  if(!confirm('¿Finalizar esta partida ahora? Se cerrará la venta de cartones y el sorteo. Para volver a vender cartones tendrás que darle a "🔄 Nueva Partida".'))return;
+  clearInterval(tmr);
+  setPhase('finished');
+  noticeA('🏁 Partida finalizada. Dale a "Nueva Partida" cuando quieras abrir la venta de nuevo.','#8B1A1A');
+}
+async function doReset(){
+  clearInterval(tmr);wf=false;G.isSpinning=false;
+  document.getElementById('winMod').style.display='none';
+  document.getElementById('conf').innerHTML='';
+  if(sb){
+    // archivar la partida actual y crear una nueva, limpia, conservando el historial en la BD
+    await sb.from('partidas').update({estado:'finalizado'}).eq('id',G.partidaId);
+    var ins=await sb.from('partidas').insert({
+      nombre:'Bingo Star Online',precio_carton:G.priceBs,limite_cartones:G.cardLimit,intervalo_seg:G.sec
+    }).select().single();
+    var newRounds=G.rounds.map(function(r,i){return {partida_id:ins.data.id,numero_ronda:i+1,nombre:r.name,modo:r.mode};});
+    await sb.from('rondas').insert(newRounds);
+    await sb.from('configuracion').update({partida_activa_id:ins.data.id}).eq('id',1);
+    G.partidaId=ins.data.id;
+    G._cfgPartidaActivaId=ins.data.id;
+    subscribeRealtime();
+    G.players=[];G.me=null;G.refs=[];
+    await loadOrCreatePartida();await loadRondas();await loadJugadoresYCartones();await loadDepositos();await loadGanadores();
+  }else{
+    G.phase='waiting';G.called=[];G.current=null;
+    G.pool=sh(Array.from({length:75},function(_,i){return i+1;}));
+    G.players=[];G.me=null;G.tc=0;
+    G.rounds.forEach(function(r){r.done=false;});G.currentRound=0;
+  }
+  upBadges();renderBoth();
+}
+async function nextRound(){
+  document.getElementById('winMod').style.display='none';
+  var doneId=curRondaId();
+  if(sb&&doneId) await sb.from('rondas').update({estado:'finalizado'}).eq('id',doneId);
+  if(G.currentRound<G.rounds.length)G.rounds[G.currentRound].done=true;
+  G.currentRound++;
+  if(G.currentRound>=G.rounds.length){
+    noticeA('🏆 ¡Todas las rondas completadas!','#2E7D32');
+    G.phase='finished';
+    if(sb&&G.partidaId) await sb.from('partidas').update({estado:'finalizado'}).eq('id',G.partidaId);
+    upBadges();renderBoth();return;
+  }
+  clearInterval(tmr);wf=false;G.isSpinning=false;
+  G.phase='waiting';G.called=[];G.current=null;
+  G.pool=sh(Array.from({length:75},function(_,i){return i+1;}));
+  document.getElementById('conf').innerHTML='';
+  var nextId=curRondaId();
+  if(sb){
+    await sb.from('partidas').update({estado:'esperando'}).eq('id',G.partidaId);
+    if(nextId) await sb.from('rondas').update({estado:'pendiente',numeros_cantados:[],numero_actual:null}).eq('id',nextId);
+  }
+  noticeA('🎱 '+(G.currentRound+1)+'ª Ronda: '+G.rounds[G.currentRound].name+' — '+MODE_LABELS[curMode()],'#00695C');
+  upBadges();renderBoth();
+}
+
+// ── REGISTRO ─────────────────────────────────────────────
+function openReg(){
+  // BLOQUEAR si juego en curso
+  if(G.phase==='playing'||G.phase==='finished'){
+    noticeP('🔒 El juego ya comenzó. No se pueden comprar cartones.','#8B1A1A');return;
+  }
+  if(cartonsLeft()<=0){
+    noticeP('🚫 No quedan cartones disponibles','#8B1A1A');return;
+  }
+  var pm=G.pm;
+  document.getElementById('regPM').innerHTML=
+    '<p style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;margin-bottom:8px;text-transform:uppercase">📲 Realiza el pago a estos datos:</p>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+    pf('Banco',pm.banco)+pf('Titular',pm.nom)+pf('Cédula',pm.ci)+pf('Teléfono',pm.tel)+
+    '</div>'+
+    '<div style="border-top:1px solid rgba(255,255,255,.2);padding-top:8px">'+
+    '<p class="pmtit">Precio por cartón</p>'+
+    '<p class="pmval" style="font-size:22px">'+fBs(G.priceBs)+'</p></div>';
+  document.getElementById('rName').value='';
+  document.getElementById('rPhone').value='';
+  document.getElementById('rRef').value='';
+  document.getElementById('rQty').value='1';
+  updCost();
+  document.getElementById('regMod').style.display='flex';
+  startRegTimer();
+  setTimeout(function(){document.getElementById('rName').focus();},80);
+}
+function pf(l,v){return '<div><p class="pmtit">'+l+'</p><p class="pmval">'+v+'</p></div>';}
+function closeReg(){
+  document.getElementById('regMod').style.display='none';clearInterval(regTimerInt);
+  var rImg=document.getElementById('rImg');if(rImg)rImg.value='';
+  var prev=document.getElementById('imgPreview');if(prev){prev.style.display='none';prev.src='';}
+  var lbl=document.getElementById('imgLabel');if(lbl)lbl.textContent='📎 Toca aquí para adjuntar la captura de tu pago';
+  var drop=document.getElementById('imgDropArea');if(drop){drop.style.background='#FFFAF0';drop.style.borderColor='#E8C870';}
+}
+function syncWaFromPm(){
+  var same=document.getElementById('rSameWa').checked;
+  var wrap=document.getElementById('rWaWrap');
+  wrap.style.display=same?'none':'block';
+  if(same){
+    var pm=document.getElementById('rPmPhone').value;
+    var wa=document.getElementById('rPhone');
+    if(wa)wa.value=pm;
+  }
+}
+function updCost(){
+  var left=cartonsLeft();
+  var el=document.getElementById('rQty');if(!el)return;
+  if(el.value===''){
+    document.getElementById('rTotal').textContent=fBs(0);
+    document.getElementById('rAvail').textContent='Quedan '+left+' cartones disponibles';
+    return;
+  }
+  var q=Math.min(left,Math.max(1,parseInt(el.value,10)||1));
+  el.value=q;
+  document.getElementById('rTotal').textContent=fBs(q*G.priceBs);
+  document.getElementById('rAvail').textContent='Quedan '+left+' cartones disponibles';
+}
+async function doRegister(){
+  var nm=document.getElementById('rName').value.trim();
+  var ap=document.getElementById('rLastName').value.trim();
+  var pmPh=document.getElementById('rPmPhone').value.trim();
+  var sameWa=document.getElementById('rSameWa').checked;
+  var ph=sameWa?pmPh:document.getElementById('rPhone').value.trim();
+  var rf=document.getElementById('rRef').value.trim();
+  var q=Math.max(1,Math.min(cartonsLeft(),parseInt(document.getElementById('rQty').value)||1));
+  var montoDeclarado=parseFloat(document.getElementById('rMontoPagado').value);
+  if(!nm){noticeP('⚠️ Ingresa tu nombre','#C62828');return;}
+  if(!ap){noticeP('⚠️ Ingresa tu apellido','#C62828');return;}
+  if(pmPh.replace(/\D/g,'').length<10){noticeP('⚠️ Ingresa el teléfono de Pago Móvil completo','#C62828');return;}
+  if(ph.replace(/\D/g,'').length<10){noticeP('⚠️ Ingresa tu celular WhatsApp completo','#C62828');return;}
+  if(phoneAlreadyUsed(pmPh)){noticeP('⚠️ Ese número de Pago Móvil ya tiene una reserva activa. Si ya pagaste, espera la aprobación.','#E65100');return;}
+  if(rf.length!==8){noticeP('⚠️ Ingresa exactamente los 8 últimos dígitos de la referencia','#C62828');return;}
+  if(refAlreadyUsed(rf)){noticeP('🚫 Esta referencia ya fue registrada. No puedes usarla dos veces.','#8B1A1A');return;}
+  if(isNaN(montoDeclarado)||montoDeclarado<=0){noticeP('⚠️ Ingresa el monto exacto que pagaste','#C62828');return;}
+  if(cartonsLeft()<=0){noticeP('🚫 No quedan cartones disponibles','#8B1A1A');return;}
+  if(!sb){noticeP('⚠️ Falta configurar Supabase en index.html','#8B1A1A');return;}
+  var imgFile=document.getElementById('rImg').files[0];
+  if(!imgFile){noticeP('⚠️ Adjunta la foto de tu comprobante de pago','#C62828');return;}
+  var cards=Array.from({length:q},function(){return gc();});
+  try{
+    // 0. Subir la foto del comprobante al bucket "comprobantes"
+    var ext=(imgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    var path=rf+'_'+Date.now()+'.'+ext;
+    var upl=await sb.storage.from('comprobantes').upload(path,imgFile,{cacheControl:'3600',upsert:false});
+    if(upl.error){noticeP('⚠️ No se pudo subir el comprobante. Intenta de nuevo.','#C62828');return;}
+    var comprobanteUrl=sb.storage.from('comprobantes').getPublicUrl(path).data.publicUrl;
+    // 1. Buscar o crear jugador por teléfono de Pago Móvil (número único por persona)
+    var existing=await sb.from('jugadores').select('*').eq('telefono_pago_movil',pmPh).maybeSingle();
+    var jugador=existing.data;
+    if(!jugador){
+      var insJ=await sb.from('jugadores').insert({nombre:nm,apellido:ap,celular:ph,telefono_pago_movil:pmPh}).select().single();
+      if(insJ.error)throw insJ.error;
+      jugador=insJ.data;
+    }
+    // 2. Insertar cartones
+    var cartonRows=cards.map(function(c){return {partida_id:G.partidaId,jugador_id:jugador.id,numeros:c,pagado:false};});
+    var insC=await sb.from('cartones').insert(cartonRows).select();
+    if(insC.error)throw insC.error;
+    // 3. Insertar depósito (referencia única por partida activa)
+    var insD=await sb.from('depositos').insert({
+      partida_id:G.partidaId,jugador_id:jugador.id,nombre:nm+' '+ap,celular:ph,referencia:rf,
+      cantidad_cartones:q,monto_bs:(q*G.priceBs).toFixed(2),monto_declarado:montoDeclarado.toFixed(2),
+      comprobante_url:comprobanteUrl,
+      estado:'pendiente',expira_at:new Date(Date.now()+10*60*1000).toISOString()
+    }).select().single();
+    if(insD.error)throw insD.error;
+    // 4. Actualizar total de cartones de la partida
+    await sb.from('partidas').update({total_cartones:G.tc+q}).eq('id',G.partidaId);
+    localStorage.setItem('bso_phone',pmPh);
+    G.me={id:jugador.id,name:nm+' '+ap,celular:ph,cards:cards,cardIds:insC.data.map(function(c){return c.id;}),pagado:cards.map(function(){return false;})};
+    var ix=G.players.findIndex(function(x){return x.id===jugador.id;});
+    if(ix>=0)G.players[ix]=G.me;else G.players.push(G.me);
+    G.tc+=q;
+    closeReg();renderBoth();
+    noticeP('✅ Reserva enviada! Ref: #'+rf+'. El admin verificará tu pago.','#2E7D32');
+  }catch(e){
+    console.error(e);
+    if(e&&e.code==='23505'&&e.message&&e.message.indexOf('pm_unico')>=0)noticeP('🚫 Ese número de Pago Móvil ya está registrado con otro nombre.','#8B1A1A');
+    else if(e&&e.code==='23505')noticeP('🚫 Esta referencia ya fue registrada.','#8B1A1A');
+    else noticeP('⚠️ Ocurrió un error al enviar tu reserva. Intenta de nuevo.','#C62828');
+  }
+}
+
+// ── WINNER ───────────────────────────────────────────────
+function showWin(ws,pat,cl,pot){
+  pFan();showConf();
+  var l=lof(cl);var ea=(pot/Math.max(ws.length,1)).toFixed(2);
+  var rndName=G.currentRound<G.rounds.length?G.rounds[G.currentRound].name:'Ronda';
+  if(!sb){
+    G.history.push({rnd:rndName,pat:pat,closing:cl,winners:ws.slice(),
+      prize:ea,pot:pot.toFixed(2),ts:new Date().toLocaleTimeString('es-VE'),cnt:G.called.length});
+  }
+  var isLast=G.currentRound>=G.rounds.length-1;
+  var rows=ws.map(function(w){
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #EDD9AA">'+
+      '<b>⭐ '+w+'</b><span style="color:#1B5E20;font-weight:900;font-size:18px">'+fBs(ea)+'</span></div>';
+  }).join('');
+  document.getElementById('winContent').innerHTML=
+    '<div style="background:#FFF3DC;border:2px solid #E8C870;border-radius:10px;padding:8px 12px;margin-bottom:10px">'+
+    '<p style="font-weight:900;color:#8B1A1A">'+rndName+' — '+pat+'</p></div>'+
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px">'+
+    '<div class="fk" style="width:68px;height:68px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 32% 30%,#fff 0%,'+CLR[l]+' 45%);box-shadow:0 0 28px '+CLR[l]+';color:#fff;line-height:1.1">'+
+    '<span style="font-size:13px">'+l+'</span><span style="font-size:26px;font-weight:900">'+cl+'</span></div>'+
+    '<span class="fk" style="font-size:26px;color:'+CLR[l]+'">'+l+'-'+cl+'</span></div>'+
+    '<div style="background:#FFF8EC;border:2px solid #E8C870;border-radius:12px;padding:12px;margin-bottom:10px">'+
+    '<p style="color:#8B5E00;font-size:11px;margin-bottom:6px">🏆 Ganador'+(ws.length>1?'es':'')+':</p>'+rows+'</div>'+
+    '<div style="background:linear-gradient(135deg,#E8F5E9,#C8E6C9);border:2px solid #43A047;border-radius:12px;padding:12px;margin-bottom:8px">'+
+    '<p style="color:#1B5E20;font-size:11px;font-weight:700">🎯 Premio (90% del bote)</p>'+
+    '<p class="fk" style="color:#1B5E20;font-size:30px;line-height:1">'+fBs(pot)+'</p></div>'+
+    (isLast?'<p style="color:#8B1A1A;font-weight:800;font-size:13px">🏁 ¡Última ronda! Gracias por jugar.</p>':
+      '<p style="color:#00695C;font-weight:800;font-size:13px">➡️ Siguiente: '+(G.currentRound+1<G.rounds.length?G.rounds[G.currentRound+1].name+' ('+MODE_LABELS[G.rounds[G.currentRound+1].mode]+')':'Fin')+'</p>');
+  document.getElementById('winMod').style.display='flex';
+}
+
+// ── NOTICES / BADGES ─────────────────────────────────────
+function noticeP(msg,col){var el=document.getElementById('pNotice');if(!el)return;el.innerHTML='<div class="notice" style="background:'+col+'">'+msg+'</div>';setTimeout(function(){el.innerHTML='';},5000);}
+function noticeA(msg,col){var el=document.getElementById('aNotice');if(!el)return;el.innerHTML='<div class="notice" style="background:'+col+'">'+msg+'</div>';setTimeout(function(){el.innerHTML='';},5500);}
+function upBadges(){
+  var m={waiting:{t:'⚪ Esperando',c:'rgba(255,255,255,.15)'},playing:{t:'🟢 En Juego',c:'rgba(67,160,71,.5)'},
+    paused:{t:'🟡 Pausado',c:'rgba(251,140,0,.5)'},finished:{t:'🔴 Terminado',c:'rgba(229,57,53,.45)'}};
+  var b=m[G.phase]||m.waiting;
+  ['pBadge','aBadge'].forEach(function(id){var el=document.getElementById(id);if(el){el.textContent=b.t;el.style.background=b.c;}});
+}
+
+// ── BUILD TOMBOLA ─────────────────────────────────────────
+function bTomb(){
+  var cur=G.current,l=cur?lof(cur):null,col=l?CLR[l]:'#C8A060';
+  var bg=cur?'radial-gradient(circle at 32% 28%,#fff 0%,'+col+' 42%)':'radial-gradient(circle at 32% 28%,#E8D5B0 0%,#C8A060 100%)';
+  var rows='';
+  LTRS.forEach(function(lt){
+    var r=RNG[lt],cells='';
+    cells+='<span style="width:24px;height:24px;border-radius:50%;background:'+CLR[lt]+';display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex-shrink:0">'+lt+'</span>';
+    for(var n=r[0];n<=r[1];n++){
+      var on=G.called.indexOf(n)>=0,ic=n===cur;
+      cells+='<span style="width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;background:'+(on?CLR[lt]:'#F0E0BB')+';color:'+(on?'#fff':'#8B5E00')+';outline:'+(ic?'2.5px solid #8B1A1A':'none')+';box-shadow:'+(ic?'0 0 8px '+CLR[lt]:'none')+';transform:'+(ic?'scale(1.18)':'scale(1)')+';transition:all .2s">'+n+'</span>';
+    }
+    rows+='<div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">'+cells+'</div>';
+  });
+  var live=G.phase==='playing';
+  var rndInfo='';
+  if(G.currentRound<G.rounds.length){
+    var rnd=G.rounds[G.currentRound];
+    rndInfo='<div style="text-align:center;margin-bottom:8px"><span class="rpill active">'+rnd.name+' — '+MODE_LABELS[rnd.mode]+'</span></div>';
+  }
+  return rndInfo+
+    '<h3 class="fk" style="font-size:18px;color:#8B1A1A;text-align:center;margin-bottom:10px">🎱 Tómbola — 75 Bolas</h3>'+
+    '<div style="display:flex;justify-content:center;margin-bottom:14px;position:relative">'+
+    (live?'<span class="pring"></span>':'')+
+    '<div id="ballOuter" class="bglw" style="width:112px;height:112px;border-radius:50%;--gc:'+col+';border:4px solid '+(cur?col:'#D4A017')+';overflow:hidden;position:relative'+(live?';cursor:pointer" onclick="callOne()" title="Sacar número"':'"')+'>'+
+    '<div id="ballInner" class="fk'+(cur?' spin-in':'')+'" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:'+bg+';color:#fff;text-align:center">'+
+    (cur?'<span style="font-size:16px;line-height:1">'+l+'</span><span style="font-size:38px;line-height:1">'+cur+'</span>':'<span style="font-size:30px;opacity:.35">🎱</span>')+
+    '</div></div></div>'+
+    '<div style="display:flex;flex-direction:column;gap:4px">'+rows+'</div>'+
+    '<p style="text-align:center;color:#8B5E00;font-size:11px;margin-top:10px;font-weight:700">'+G.called.length+'/75 números cantados</p>';
+}
+
+// ── BUILD CARD ────────────────────────────────────────────
+function bCard(card,ca,lbl,win,pat,mode){
+  var hdr=lbl?'<p style="text-align:center;font-size:11px;color:#5C2800;font-weight:800;margin-bottom:6px">'+lbl+'</p>':'';
+  var ch=LTRS.map(function(l){return '<div style="height:36px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:'+CLR[l]+';color:#fff;font-size:17px" class="fk bingo-head">'+l+'</div>';}).join('');
+  var cells='';
+  for(var row=0;row<5;row++){
+    for(var col=0;col<5;col++){
+      var fr=col===2&&row===2,nm=fr?0:card[col][row],on=ion(card,row,col,ca);
+      var isWinCell=win&&on;
+      var cls='cell'+(fr?' cfree':on?' con'+(isWinCell?' cwin':''):'');
+      cells+='<div class="'+cls+'">'+(fr?'LIBRE':nm)+'</div>';
+    }
+  }
+  return '<div class="bingo-card" style="border-radius:18px;padding:12px;max-width:230px;width:100%;background:#FFFAF0;border:'+(win?'3px solid #F5C842':'2px solid #EDD9AA')+';box-shadow:'+(win?'0 0 28px rgba(212,160,23,.5)':'0 3px 14px rgba(139,26,26,.1)')+'">'+
+    hdr+'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-bottom:3px">'+ch+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px">'+cells+'</div>'+
+    (win?'<p style="text-align:center;color:#8B1A1A;font-weight:900;font-size:13px;margin-top:6px">🏆 '+pat+'</p>':'')+
+    '</div>';
+}
+
+// ── BUILD PM BOX ──────────────────────────────────────────
+function bPMBox(){
+  return '<div class="pmbox">'+
+    '<p style="font-size:13px;font-weight:900;color:#FFEB3B;margin-bottom:10px;text-align:center">📲 PAGO MÓVIL — Datos del depósito</p>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'+
+    pf('Banco',G.pm.banco)+pf('Titular',G.pm.nom)+pf('Cédula',G.pm.ci)+pf('Teléfono',G.pm.tel)+
+    '</div>'+
+    '<div style="border-top:1px solid rgba(255,255,255,.2);padding-top:8px;text-align:center">'+
+    '<p class="pmtit">Precio por cartón</p>'+
+    '<p class="pmval" style="font-size:24px">'+fBs(G.priceBs)+'</p></div></div>';
+}
+
+// ── BUILD CALCULATOR ──────────────────────────────────────
+function bCalc(){
+  return '<div class="stitle">🧮 Calculadora de Cartones</div>'+
+    '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:10px">¿Cuántos cartones quieres? Calcula tu monto antes de pagar:</p>'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
+    '<label class="lbl" style="margin-bottom:0;white-space:nowrap">Cartones:</label>'+
+    '<input type="number" min="1" max="'+cartonsLeft()+'" value="1" id="calcQty"'+
+    ' style="flex:1;background:#FFF8EC;border:2px solid #E8C870;border-radius:11px;padding:8px 12px;color:#3D1A00;font-size:16px;outline:none;font-family:Nunito,sans-serif;font-weight:800;text-align:center"'+
+    ' oninput="updCalc()"/>'+
+    '</div>'+
+    '<div class="calc-result">'+
+    '<p style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-bottom:4px">TOTAL A PAGAR</p>'+
+    '<p class="fk" id="calcResult" style="color:#FFEB3B;font-size:32px;line-height:1">'+fBs(G.priceBs)+'</p>'+
+    '<p style="color:rgba(255,255,255,.6);font-size:11px;margin-top:4px">1 cartón × '+fBs(G.priceBs)+'</p>'+
+    '</div>';
+}
+
+// ── BUILD CARD COUNTER ────────────────────────────────────
+function bCardCounter(){
+  var left=cartonsLeft();
+  var pct=Math.round((left/G.cardLimit)*100);
+  var col=left>50?'#4ade80':left>20?'#fbbf24':'#f87171';
+  return '<p style="color:rgba(255,255,255,.75);font-size:11px;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Cartones disponibles</p>'+
+    '<p class="fk" style="color:'+col+';font-size:36px;line-height:1">'+left+'</p>'+
+    '<p style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">de '+G.cardLimit+' totales ('+pct+'% disponible)</p>'+
+    '<div style="background:rgba(255,255,255,.15);border-radius:99px;height:6px;margin-top:8px">'+
+    '<div style="background:'+col+';border-radius:99px;height:100%;width:'+pct+'%;transition:width .4s"></div></div>';
+}
+
+// ── BUILD PLAYER LIST (public) ───────────────────────────
+function bPlayerList(){
+  if(!G.refs.length) return '<div class="stitle">👥 Jugadores</div><p style="color:#8B5E00;text-align:center;font-size:13px;padding:8px 0">Sé el primero en reservar 🎉</p>';
+  var rows=G.refs.map(function(r){
+    var isPaid=r.st==='aprobado';
+    var isExp=r.st==='expirado'||r.st==='rechazado';
+    var timeLeft='Pendiente';
+    if(isExp) return '';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #EDD9AA">'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="font-size:18px">'+(isPaid?'✅':'⏳')+'</span>'+
+      '<div>'+
+      '<p style="font-weight:800;font-size:13px;color:#3D1A00">'+r.nm+'</p>'+
+      '<p style="font-size:11px;color:#8B5E00;font-weight:700">'+r.q+' cartón'+(r.q>1?'es':'')+'</p>'+
+      '</div></div>'+
+      '<div style="text-align:right">'+
+      (isPaid?
+        '<span style="background:#E8F5E9;color:#2E7D32;border:2px solid #43A047;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:900">✅ Aprobado</span>':
+        '<span style="background:#FFF3DC;color:#8B5E00;border:2px dashed #E8C870;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:900">⏳ '+timeLeft+'</span>'
+      )+'</div></div>';
+  }).join('');
+  var active=G.refs.filter(function(r){return r.st!=='rechazado'&&r.st!=='expirado';});
+  return '<div class="stitle">👥 Jugadores ('+active.length+')</div>'+rows;
+}
+
+// ── RECOVER SESSION ───────────────────────────────────────
+function recoverSession(){
+  var ph=document.getElementById('recoverPhone');
+  if(!ph)return;
+  var val=ph.value.trim().replace(/\D/g,'');
+  if(val.length<10){noticeP('⚠️ Ingresa tu celular completo','#C62828');return;}
+  // Find player by phone
+  var ref=G.refs.find(function(r){return (r.pm||'').replace(/\D/g,'')===val&&r.st!=='rechazado'&&r.st!=='expirado';});
+  if(!ref){noticeP('No encontramos una reserva con ese celular','#8B1A1A');return;}
+  var player=G.players.find(function(p){return p.id===ref.jugadorId;});
+  if(!player){noticeP('Reserva encontrada pero pendiente de aprobación','#E65100');return;}
+  G.me=player;
+  localStorage.setItem('bso_phone',ph.value.trim());
+  noticeP('✅ Bienvenido de vuelta, '+player.name+'!','#2E7D32');
+  renderPlayer();
+}
+
+// ── PENDING CHECKER ───────────────────────────────────────
+// Las reservas pendientes NO expiran automáticamente.
+// Solo pueden cambiar de estado mediante aprobación o rechazo manual.
+setInterval(function(){
+  var pl=document.getElementById('pPlayerList');
+  if(pl&&G.refs.length) pl.innerHTML=bPlayerList();
+},10000);
+
+// ── BUILD ADMIN PANEL ─────────────────────────────────────
+function bAdmin(){
+  var totBs=G.tc*G.priceBs,potBs=totBs*.9,hseBs=totBs*.1;
+  var rPills=G.rounds.map(function(r,i){
+    var cls=r.done?'done':(i===G.currentRound&&G.phase!=='waiting'?'active':'pending');
+    return '<div class="rpill '+cls+'">'+(r.done?'✓ ':i===G.currentRound?'▶ ':'')+r.name+' — '+MODE_LABELS[r.mode]+'</div>';
+  }).join('');
+  var rCfg=G.rounds.map(function(r,i){
+    var modeOpts=['lines','corners','full','letter','letraL','letraT'].map(function(m){
+      return '<option value="'+m+'"'+(r.mode===m?' selected':'')+'>'+MODE_LABELS[m]+'</option>';
+    }).join('');
+    return '<div class="rnd-cfg">'+
+      '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:6px">'+
+      '<input class="inp" style="margin-bottom:0;font-size:13px" value="'+r.name+'" oninput="G.rounds['+i+'].name=this.value" onchange="saveRoundMeta('+i+')"/>'+
+      '<button class="btn br" style="padding:5px 10px;font-size:12px;border-radius:8px" onclick="removeRnd('+i+')">✗</button></div>'+
+      '<select class="sel" style="margin-bottom:0" onchange="G.rounds['+i+'].mode=this.value;saveRoundMeta('+i+')">'+modeOpts+'</select></div>';
+  }).join('');
+
+  return (
+    '<div class="card"><div class="stitle">⚙️ Control de Partida</div>'+
+    '<div style="margin-bottom:12px">'+rPills+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">'+
+    '<button class="btn bg" '+(G.phase==='playing'?'disabled':'')+' onclick="aStart()">▶ INICIAR</button>'+
+    '<button class="btn bo" '+(G.phase!=='playing'?'disabled':'')+' onclick="aPause()">⏸ PAUSAR</button>'+
+    '<button class="btn br" '+(G.phase==='finished'?'disabled':'')+' onclick="finalizarPartida()">🏁 FINALIZAR</button></div>'+
+    '<button class="btn br" style="width:100%;padding:9px;font-size:13px;margin-bottom:12px" onclick="doReset()">🔄 Nueva Partida (reabrir venta de cartones)</button>'+
+    '<button class="btn brb" style="width:100%;padding:11px;margin-bottom:12px;font-size:14px" '+(G.phase!=='playing'?'disabled':'')+' onclick="callOne()">🎱 Sacar Número Manual</button>'+
+    '<label class="lbl">⏱ Intervalo automático: <b id="secLabel">'+G.sec+'s</b></label>'+
+    '<input type="range" min="3" max="30" value="'+G.sec+'" oninput="G.sec=+this.value;document.getElementById(\'secLabel\').textContent=this.value+\'s\';if(G.phase===\'playing\'){clearInterval(tmr);tmr=setInterval(callOne,G.sec*1000);}" onchange="if(sb&&G.partidaId)sb.from(\'partidas\').update({intervalo_seg:G.sec}).eq(\'id\',G.partidaId)"/>'+
+    '</div>'+
+
+    '<div class="card"><div class="stitle">🎯 Rondas de la Partida</div>'+
+    rCfg+
+    '<button class="btn bt" style="width:100%;padding:9px;font-size:13px;margin-top:4px" onclick="addRnd()">+ Agregar Ronda</button></div>'+
+
+    '<div class="card"><div class="stitle">🃏 Límite de Cartones</div>'+
+    '<label class="lbl">Máximo de cartones por partida</label>'+
+    '<input class="inp" type="number" min="10" max="9999" value="'+G.cardLimit+'" oninput="G.cardLimit=+this.value||G.cardLimit" onchange="if(sb&&G.partidaId)sb.from(\'partidas\').update({limite_cartones:G.cardLimit}).eq(\'id\',G.partidaId);renderBoth()"/>'+
+    '<div style="background:linear-gradient(135deg,#7B0D0D,#9B1515);border-radius:12px;padding:12px;text-align:center;border:2px solid #F5C842">'+
+    '<p style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700">Vendidos / Disponibles / Límite</p>'+
+    '<p class="fk" style="color:#F5C842;font-size:22px">'+G.tc+' / '+cartonsLeft()+' / '+G.cardLimit+'</p></div></div>'+
+
+    '<div class="card"><div class="stitle">💵 Precio por Cartón</div>'+
+    '<label class="lbl">Precio en Bolívares (Bs.)</label>'+
+    '<input class="inp" type="number" min="1" step="0.5" value="'+G.priceBs+'" oninput="G.priceBs=+this.value||G.priceBs" onchange="if(sb&&G.partidaId)sb.from(\'partidas\').update({precio_carton:G.priceBs}).eq(\'id\',G.partidaId);renderBoth()" placeholder="Ej: 50"/>'+
+    '<div class="pmbox" style="text-align:center;padding:12px">'+
+    '<p class="pmtit">Precio actual por cartón</p>'+
+    '<p class="pmval" style="font-size:26px">'+fBs(G.priceBs)+'</p></div></div>'+
+
+    '<div class="card"><div class="stitle">📲 Datos Pago Móvil</div>'+
+    '<label class="lbl">Banco</label><input class="inp" value="'+G.pm.banco+'" oninput="G.pm.banco=this.value;updPMBoxes()" onchange="savePmConfig()"/>'+
+    '<label class="lbl">Titular</label><input class="inp" value="'+G.pm.nom+'" oninput="G.pm.nom=this.value;updPMBoxes()" onchange="savePmConfig()"/>'+
+    '<label class="lbl">Cédula</label><input class="inp" value="'+G.pm.ci+'" oninput="G.pm.ci=this.value;updPMBoxes()" onchange="savePmConfig()"/>'+
+    '<label class="lbl">Teléfono</label><input class="inp" value="'+G.pm.tel+'" oninput="G.pm.tel=this.value;updPMBoxes()" onchange="savePmConfig()"/>'+
+    '</div>'+
+
+    '<div class="card"><div class="stitle">📢 Telegram</div>'+
+    '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:8px">El bot vive en el grupo/canal de Telegram y anuncia el inicio, canta los números en vivo y publica al ganador.</p>'+
+    '<label class="lbl">Chat ID del grupo/canal</label>'+
+    '<input class="inp" id="tgChatId" value="'+(G.telegram.chatId||'')+'" placeholder="-1001234567890" onchange="saveTelegramConfig()"/>'+
+    '<label class="lbl">Avisar "comienza en X minutos" (separados por coma)</label>'+
+    '<input class="inp" id="tgMinutos" value="'+G.telegram.minutosAviso.join(',')+'" placeholder="30,10,5" onchange="saveTelegramConfig()"/>'+
+    '<label class="lbl">Hora programada del próximo bingo (opcional)</label>'+
+    '<input class="inp" type="datetime-local" id="tgHora" value="'+(G.horaInicioProg?new Date(G.horaInicioProg).toISOString().slice(0,16):'')+'" onchange="saveHoraInicio()"/>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin:6px 0 10px">'+
+    '<span class="tog" style="background:'+(G.telegram.activo?'#43A047':'#C8A060')+'" onclick="toggleTelegramActivo()"><span class="togdot" style="left:'+(G.telegram.activo?'26px':'2px')+'"></span></span>'+
+    '<span style="font-size:12px;font-weight:800;color:#5C2800">Notificaciones activas</span></div>'+
+    '<p style="font-size:11px;color:#8B5E00">📖 Cómo obtener el Chat ID y desplegar el bot: revisa el README del proyecto <b>telegram-bot</b>.</p></div>'+
+
+    '<button class="btn bg fk" style="width:100%;padding:16px;font-size:16px;border-radius:14px;margin:6px 0 18px" onclick="saveAllSettings()">💾 Guardar todos los cambios</button>'+
+
+    '<div class="card"><div class="stitle">🎙️ Voz de la Tómbola</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<button class="btn '+(G.voiceGender==='female'?'bt':'bd')+'" style="padding:12px" onclick="setVoice(\'female\')">👩 Femenina</button>'+
+    '<button class="btn '+(G.voiceGender==='male'?'bt':'bd')+'" style="padding:12px" onclick="setVoice(\'male\')">👨 Masculina</button></div>'+
+    '<button class="btn bg" style="width:100%;padding:9px;font-size:13px;margin-top:8px" onclick="spk(42)">🔊 Probar voz</button></div>'+
+
+    '<div class="card"><div class="stitle">💸 Finanzas</div>'+
+    rw('Cartones vendidos',''+G.tc)+rw('Ingresos totales',fBs(totBs))+'<div class="sep"></div>'+
+    rwc('🏠 Casa (10%)',fBs(hseBs),'#C0392B')+
+    '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;align-items:center">'+
+    '<span style="color:#2E7D32;font-weight:800">🎯 Bote (90%)</span>'+
+    '<p class="fk" style="color:#1B5E20;font-size:22px">'+fBs(potBs)+'</p></div></div>'+
+
+    '<div class="card"><div class="stitle">🔐 Seguridad</div>'+
+    '<label class="lbl">Nueva contraseña (admin)</label>'+
+    '<input class="inp" type="password" id="aPwdNew" placeholder="Nueva contraseña..."/>'+
+    '<button class="btn bt" style="width:100%;padding:10px" onclick="changePwd()">🔐 Cambiar</button></div>'+
+
+    '<div class="card"><div class="stitle">👥 Jugadores ('+G.players.length+')</div>'+
+    (G.players.length?G.players.map(function(p){
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #EDD9AA">'+
+        '<b>'+p.name+'</b><span style="color:#00796B;font-size:12px;font-weight:700">'+p.cards.length+' cartón'+(p.cards.length>1?'es':'')+'</span></div>';
+    }).join(''):'<p style="color:#8B5E00;text-align:center;font-size:13px">Sin jugadores aún</p>')+
+    '</div>'
+  );
+}
+function rw(l,v){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #EDD9AA;font-size:13px"><span style="color:#8B5E00">'+l+'</span><b>'+v+'</b></div>';}
+function rwc(l,v,c){return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #EDD9AA;font-size:13px"><span style="color:'+c+';font-weight:700">'+l+'</span><b style="color:'+c+'">'+v+'</b></div>';}
+
+// ── BUILD REFS ────────────────────────────────────────────
+function waLink(ph){return 'https://wa.me/58'+ph.replace(/\D/g,'').replace(/^0/,'');}
+function waBtn(ph){
+  return '<a href="'+waLink(ph)+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:#25D366;color:#fff;padding:5px 10px;border-radius:99px;text-decoration:none;font-weight:800;font-size:12px;white-space:nowrap">'+
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.48 1.32 5L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.46 17.5 2 12.04 2zm5.78 14.16c-.24.68-1.4 1.32-1.93 1.36-.5.05-1.02.24-3.4-.7-2.9-1.15-4.74-4.06-4.88-4.25-.14-.19-1.16-1.55-1.16-2.96 0-1.41.74-2.1 1-2.39.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.14.07.14.12.31.02.5-.1.19-.15.31-.29.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.62 2.01 1.11.99 2.05 1.3 2.34 1.45.29.14.46.12.63-.07.17-.19.72-.84.91-1.13.19-.29.38-.24.63-.14.26.1 1.65.78 1.93.92.29.14.48.21.55.33.07.13.07.71-.17 1.39z"/></svg>'+
+    ph+'</a>';
+}
+function bRefs(){
+  var pend=G.refs.filter(function(r){return r.st==='pendiente';});
+  var hist=G.refs.filter(function(r){return r.st!=='pendiente';});
+  var t='<div class="stitle">📥 Referencias Pago Móvil <span style="background:#8B1A1A;color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;margin-left:4px">'+pend.length+' pendientes</span></div>';
+  if(!pend.length){t+='<p style="color:#8B5E00;text-align:center;font-size:13px;padding:8px 0">Sin referencias pendientes</p>';}
+  else{
+    t+='<div style="overflow-x:auto"><table class="rtbl"><thead><tr><th>Hora</th><th>Nombre</th><th>Pago Móvil</th><th>WhatsApp</th><th>Ref.</th><th>Cart.</th><th>Esperado</th><th>Pagó</th><th>¿Cuadra?</th><th>Estado</th><th>Acción</th></tr></thead><tbody>'+
+    pend.map(function(r){
+      var cuadra=matchMonto(r.montoDeclarado,r.monto);
+      return '<tr><td>'+r.ts+'</td><td><b>'+r.nm+'</b></td>'+
+        '<td style="font-family:monospace;font-weight:800">'+(r.pm||'—')+'</td>'+
+        '<td>'+waBtn(r.ph)+'</td>'+
+        '<td style="font-family:monospace;font-weight:900;color:#8B1A1A">#'+r.rf+'</td>'+
+        '<td style="text-align:center;font-weight:800">'+r.q+'</td>'+
+        '<td style="font-weight:700;color:#5C2800">'+fBs(r.monto)+'</td>'+
+        '<td style="font-weight:900;color:#2E7D32">'+(r.montoDeclarado!=null?fBs(r.montoDeclarado):'—')+'</td>'+
+        '<td style="text-align:center;font-size:16px">'+(r.montoDeclarado==null?'—':cuadra?'✅':'❌')+'</td>'+
+        '<td>'+
+          (r.st==='aprobado'?'<span style="background:#E8F5E9;color:#2E7D32;border:2px solid #43A047;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:900">✅ Aprobado</span>':
+          r.st==='expirado'?'<span style="background:#FFF3DC;color:#E65100;border:2px solid #FB8C00;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:900">⏰ Expirado</span>':
+          '<span style="background:#FFF3DC;color:#8B5E00;border:2px dashed #E8C870;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:900">⏳ Pendiente</span>')+
+        '</td>'+
+        '<td><div style="display:flex;gap:4px">'+
+        '<button class="btn bg" style="padding:4px 10px;font-size:11px;border-radius:8px" onclick="apRef(\''+r.id+'\',1)">✓</button>'+
+        '<button class="btn br" style="padding:4px 10px;font-size:11px;border-radius:8px" onclick="apRef(\''+r.id+'\',0)">✗</button>'+
+        '</div></td></tr>';
+    }).join('')+'</tbody></table></div>';
+  }
+  if(hist.length){
+    t+='<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:800;color:#5C2800;font-size:13px">📋 Historial ('+hist.length+')</summary>'+
+      '<div style="overflow-x:auto;margin-top:8px"><table class="rtbl"><thead><tr><th>Nombre</th><th>Pago Móvil</th><th>WhatsApp</th><th>Ref.</th><th>Monto</th><th>Estado</th></tr></thead><tbody>'+
+      hist.map(function(r){return '<tr><td>'+r.nm+'</td><td style="font-family:monospace">'+(r.pm||'—')+'</td><td>'+waBtn(r.ph)+'</td><td style="font-family:monospace">#'+r.rf+'</td><td>'+fBs(r.monto)+'</td><td style="font-weight:900;color:'+(r.st==='aprobado'?'#2E7D32':'#C0392B')+'">'+r.st.toUpperCase()+'</td></tr>';}).join('')+'</tbody></table></div></details>';
+  }
+  return t;
+}
+
+// ── BUILD HISTORY ─────────────────────────────────────────
+function bHistory(){
+  if(!G.history.length)return '<div class="stitle">🏆 Historial de Ganadores</div><p style="color:#8B5E00;text-align:center;font-size:13px;padding:8px 0">Sin ganadores aún</p>';
+  return '<div class="stitle">🏆 Historial de Ganadores ('+G.history.length+' ronda'+(G.history.length>1?'s':'')+')</div>'+
+    '<div style="overflow-x:auto"><table class="rtbl htbl"><thead><tr><th>Ronda</th><th>Patrón</th><th>Número</th><th>Ganador(es)</th><th>WhatsApp</th><th>Premio</th><th>Bolas</th><th>Hora</th></tr></thead><tbody>'+
+    G.history.map(function(h){
+      return '<tr><td style="font-weight:800;color:#8B1A1A">'+h.rnd+'</td>'+
+        '<td><span style="background:#FFF3DC;border:1px solid #E8C870;border-radius:8px;padding:2px 8px;font-weight:700;font-size:11px">'+h.pat+'</span></td>'+
+        '<td><span style="background:'+CLR[lof(h.closing)]+';color:#fff;border-radius:99px;padding:2px 8px;font-weight:900;font-size:12px">'+lof(h.closing)+'-'+h.closing+'</span></td>'+
+        '<td style="font-weight:800">'+h.winners.join(', ')+'</td>'+
+        '<td>'+(h.celular?waBtn(h.celular):'—')+'</td>'+
+        '<td style="font-weight:900;color:#2E7D32">'+fBs(h.prize)+'</td>'+
+        '<td style="text-align:center;color:#8B5E00;font-weight:700">'+h.cnt+'</td>'+
+        '<td style="color:#8B5E00;font-size:11px">'+h.ts+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+}
+
+// ── ADMIN ACTIONS ─────────────────────────────────────────
+async function aStart(){
+  if(G.phase==='playing')return;
+  G.pool=sh(Array.from({length:75},function(_,i){return i+1;}));
+  G.called=[];G.current=null;
+  wf=false;G.isSpinning=false;
+  var rid=curRondaId();
+  if(sb&&rid) await sb.from('rondas').update({estado:'jugando',numeros_cantados:[],numero_actual:null}).eq('id',rid);
+  setPhase('playing');
+  noticeA('🎱 '+G.rounds[G.currentRound].name+' — '+MODE_LABELS[curMode()],'#00695C');
+}
+function aPause(){
+  if(G.phase!=='playing')return;clearInterval(tmr);G.phase='paused';
+  if(sb&&G.partidaId) sb.from('partidas').update({estado:'pausado'}).eq('id',G.partidaId);
+  upBadges();renderBoth();
+}
+async function addRnd(){
+  var n=G.rounds.length+1;
+  var newR={id:'tmp'+Date.now(),name:'Ronda '+n,mode:'lines',done:false};
+  G.rounds.push(newR);renderAdmin();
+  if(sb&&G.partidaId){
+    var ins=await sb.from('rondas').insert({partida_id:G.partidaId,numero_ronda:n,nombre:newR.name,modo:'lines'}).select().single();
+    if(ins.data){newR.id=ins.data.id;renderAdmin();}
+  }
+}
+async function removeRnd(i){
+  if(G.rounds.length<=1)return;
+  var r=G.rounds[i];
+  G.rounds.splice(i,1);if(G.currentRound>=G.rounds.length)G.currentRound=G.rounds.length-1;
+  renderAdmin();
+  if(sb&&r&&typeof r.id==='string'&&r.id.indexOf('tmp')!==0) await sb.from('rondas').delete().eq('id',r.id);
+}
+function setVoice(g){
+  G.voiceGender=g;renderAdmin();
+  if(sb) sb.from('configuracion').update({voz_genero:g}).eq('id',1);
+}
+async function saveRoundMeta(i){
+  var r=G.rounds[i];if(!r||!sb||typeof r.id!=='string'||r.id.indexOf('tmp')===0)return;
+  await sb.from('rondas').update({nombre:r.name,modo:r.mode}).eq('id',r.id);
+  renderAdmin();
+}
+function savePmConfig(){
+  if(!sb)return;
+  sb.from('configuracion').update({pm_banco:G.pm.banco,pm_titular:G.pm.nom,pm_cedula:G.pm.ci,pm_telefono:G.pm.tel}).eq('id',1);
+}
+function saveTelegramConfig(){
+  if(!sb)return;
+  var chatId=document.getElementById('tgChatId').value.trim();
+  var minutos=document.getElementById('tgMinutos').value.split(',').map(function(s){return parseInt(s.trim());}).filter(function(n){return !isNaN(n);});
+  if(!minutos.length)minutos=[30,10,5];
+  G.telegram.chatId=chatId;G.telegram.minutosAviso=minutos;
+  sb.from('telegram_config').update({chat_id:chatId,minutos_aviso:minutos}).eq('id',1);
+  noticeA('📢 Configuración de Telegram guardada','#2E7D32');
+}
+function saveHoraInicio(){
+  if(!sb)return;
+  var v=document.getElementById('tgHora').value;
+  var iso=v?new Date(v).toISOString():null;
+  G.horaInicioProg=iso;
+  sb.from('partidas').update({hora_inicio_prog:iso,avisos_enviados:[]}).eq('id',G.partidaId);
+  noticeA(iso?'⏰ Inicio programado: se avisará en el grupo de Telegram':'⏰ Programación de inicio eliminada','#00695C');
+}
+function toggleTelegramActivo(){
+  G.telegram.activo=!G.telegram.activo;
+  if(sb) sb.from('telegram_config').update({activo:G.telegram.activo}).eq('id',1);
+  renderAdmin();
+}
+async function saveAllSettings(){
+  if(!sb||!G.partidaId){noticeA('⚠️ Falta configurar Supabase en index.html','#8B1A1A');return;}
+  try{
+    // datos de la partida
+    await sb.from('partidas').update({
+      precio_carton:G.priceBs, limite_cartones:G.cardLimit, intervalo_seg:G.sec
+    }).eq('id',G.partidaId);
+    // configuración general
+    await sb.from('configuracion').update({
+      pm_banco:G.pm.banco, pm_titular:G.pm.nom, pm_cedula:G.pm.ci, pm_telefono:G.pm.tel,
+      voz_genero:G.voiceGender, admin_pwd_hash:G.pwd
+    }).eq('id',1);
+    // rondas (nombre y modo de cada una)
+    for(var i=0;i<G.rounds.length;i++){
+      var r=G.rounds[i];
+      if(typeof r.id==='string'&&r.id.indexOf('tmp')===0)continue; // aún no se creó en la BD
+      await sb.from('rondas').update({nombre:r.name,modo:r.mode}).eq('id',r.id);
+    }
+    // Telegram
+    var chatIdEl=document.getElementById('tgChatId'), minEl=document.getElementById('tgMinutos'), horaEl=document.getElementById('tgHora');
+    var chatId=chatIdEl?chatIdEl.value.trim():G.telegram.chatId;
+    var minutos=minEl?minEl.value.split(',').map(function(s){return parseInt(s.trim());}).filter(function(n){return !isNaN(n);}):G.telegram.minutosAviso;
+    if(!minutos.length)minutos=[30,10,5];
+    G.telegram.chatId=chatId;G.telegram.minutosAviso=minutos;
+    await sb.from('telegram_config').update({chat_id:chatId,minutos_aviso:minutos,activo:G.telegram.activo}).eq('id',1);
+    var iso=(horaEl&&horaEl.value)?new Date(horaEl.value).toISOString():null;
+    G.horaInicioProg=iso;
+    await sb.from('partidas').update({hora_inicio_prog:iso}).eq('id',G.partidaId);
+
+    noticeA('💾 ¡Todos los cambios fueron guardados!','#2E7D32');
+    renderBoth();
+  }catch(e){
+    console.error(e);
+    noticeA('⚠️ Ocurrió un error guardando algunos cambios. Intenta de nuevo.','#C62828');
+  }
+}
+async function apRef(id,ok){
+  var r=G.refs.find(function(x){return x.id===id;});if(!r)return;
+  r.st=ok?'aprobado':'rechazado';
+  if(sb){
+    await sb.from('depositos').update({estado:r.st}).eq('id',id);
+    if(ok){
+      await sb.from('cartones').update({pagado:true}).eq('partida_id',G.partidaId).eq('jugador_id',r.jugadorId);
+    }else{
+      await sb.from('cartones').delete().eq('partida_id',G.partidaId).eq('jugador_id',r.jugadorId);
+      G.tc=Math.max(0,G.tc-r.q);
+      await sb.from('partidas').update({total_cartones:G.tc}).eq('id',G.partidaId);
+    }
+  }
+  if(!ok){G.players=G.players.filter(function(p){return p.id!==r.jugadorId;});noticeA('❌ Ref #'+r.rf+' rechazada','#B71C1C');}
+  else{
+    var pl=G.players.find(function(p){return p.id===r.jugadorId;});
+    if(pl)pl.pagado=pl.pagado.map(function(){return true;});
+    noticeA('✅ Pago de '+r.nm+' aprobado — Ref #'+r.rf,'#2E7D32');
+  }
+  renderBoth();
+}
+function updPMBoxes(){var el=document.getElementById('pPMBox');if(el)el.innerHTML=bPMBox();}
+function changePwd(){
+  var el=document.getElementById('aPwdNew');if(!el)return;
+  var v=el.value.trim();if(v.length<4){noticeA('⚠️ Mínimo 4 caracteres','#E65100');return;}
+  G.pwd=v;el.value='';
+  if(sb) sb.from('configuracion').update({admin_pwd_hash:v}).eq('id',1);
+  noticeA('🔐 Contraseña actualizada','#2E7D32');
+}
+function updCalc(){
+  var left=cartonsLeft();
+  var el=document.getElementById('calcQty');if(!el)return;
+  if(el.value===''){
+    var emptyRes=document.getElementById('calcResult');
+    if(emptyRes)emptyRes.textContent=fBs(0);
+    var emptyPar=el.parentElement&&el.parentElement.nextElementSibling;
+    if(emptyPar){var emptySmall=emptyPar.querySelector('p:last-child');if(emptySmall)emptySmall.textContent='0 cartones';}
+    return;
+  }
+  var q=Math.min(left,Math.max(1,parseInt(el.value,10)||1));
+  el.value=q;
+  var res=document.getElementById('calcResult');
+  if(res)res.textContent=fBs(q*G.priceBs);
+  var par=el.parentElement&&el.parentElement.nextElementSibling;
+  if(par){
+    var small=par.querySelector('p:last-child');
+    if(small)small.textContent=q+' cartón'+(q>1?'es':'')+' × '+fBs(G.priceBs);
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function renderPlayer(){
+  var ccEl=document.getElementById('pCardCounter');
+  if(ccEl){
+    if(G.cardLimit>0){ccEl.style.display='block';ccEl.innerHTML=bCardCounter();}
+    else ccEl.style.display='none';
+  }
+  var cEl=document.getElementById('pCalc');if(cEl)cEl.innerHTML=bCalc();
+  var pmEl=document.getElementById('pPMBox');if(pmEl)pmEl.innerHTML=bPMBox();
+  var tEl=document.getElementById('pTomb');if(tEl)tEl.innerHTML=bTomb();
+  var mEl=document.getElementById('pModes');
+  if(mEl){
+    var lbs={lines:'📏 Línea',corners:'🔲 Cuatro Esquinas',full:'⬛ Tabla Llena',letter:'✖️ Letra X',letraL:'📐 Letra L',letraT:'📊 Letra T'};
+    var curMd=curMode();
+    mEl.innerHTML='<div class="stitle">🏆 Modo Activo</div>'+
+      '<div class="rpill active" style="display:inline-flex;margin-bottom:8px">'+lbs[curMd]+'</div>'+
+      '<p style="color:#8B5E00;font-size:12px;font-weight:700">Ronda '+(G.currentRound+1)+' de '+G.rounds.length+'</p>';
+  }
+    // Player list panel
+  var plEl=document.getElementById('pPlayerList');
+  if(plEl) plEl.innerHTML=bPlayerList();
+
+  var peEl=document.getElementById('pPot');
+  if(peEl){
+    if(G.tc>0){peEl.style.display='block';
+      peEl.innerHTML='<div class="stitle">💰 Bote Actual</div>'+
+        '<p class="fk" style="color:#1B5E20;font-size:32px;line-height:1">'+fBs(G.tc*G.priceBs*.9)+'</p>'+
+        '<p style="color:#8B5E00;font-size:11px;margin-top:3px;font-weight:700">'+G.tc+' cartones × '+fBs(G.priceBs)+'</p>';
+    }else peEl.style.display='none';
+  }
+  var pr=document.getElementById('pRight');if(!pr)return;
+  // Blocked overlay when game started
+  var isBlocked=G.phase==='playing'||G.phase==='finished';
+  if(!G.me){
+    if(isBlocked){
+      pr.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:440px;text-align:center;background:#FFFAF0;border-radius:20px;border:3px solid #E53935;padding:32px">'+
+        '<div style="font-size:64px;margin-bottom:12px">🔒</div>'+
+        '<h2 class="fk" style="color:#8B1A1A;font-size:32px;margin-bottom:8px">¡Juego en Curso!</h2>'+
+        '<p style="color:#8B5E00;font-size:15px;font-weight:700;margin-bottom:8px">La venta de cartones está cerrada.</p>'+
+        '<p style="color:#8B5E00;font-size:13px;font-weight:600">Espera la próxima partida para participar.</p>'+
+        '<div style="margin-top:20px;padding:12px 24px;background:linear-gradient(135deg,#FFF3DC,#FFE0B2);border-radius:12px;border:2px solid #E8C870">'+
+        '<p style="color:#8B1A1A;font-size:13px;font-weight:700">🎱 Ronda en juego: <b>'+G.rounds[Math.min(G.currentRound,G.rounds.length-1)].name+'</b></p></div></div>';
+      return;
+    }
+    pr.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:440px;text-align:center;background:#FFFAF0;border-radius:20px;border:3px dashed #E8C870;padding:32px">'+
+      '<div style="font-size:90px;margin-bottom:14px">⭐</div>'+
+      '<h2 class="fk rbow" style="font-size:40px;margin-bottom:8px">¡Bienvenido!</h2>'+
+      '<div style="color:#D4A017;font-size:20px;letter-spacing:8px;margin:8px 0 14px">★ ★ ★ ★ ★</div>'+
+      '<p style="color:#8B5E00;font-size:15px;font-weight:700;margin-bottom:8px">Realiza tu Pago Móvil y reserva tu cartón</p>'+
+      '<p class="fk" style="color:#8B1A1A;font-size:28px">'+fBs(G.priceBs)+'</p>'+
+      '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:8px">por cartón</p>'+
+      (cartonsLeft()>0?
+        '<p style="background:#7B0D0D;color:#F5C842;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:900;margin-bottom:20px">'+cartonsLeft()+' cartones disponibles</p>':
+        '<p style="background:#8B1A1A;color:#fff;border-radius:10px;padding:6px 14px;font-size:13px;font-weight:900;margin-bottom:20px">🚫 Cartones agotados</p>')+
+      (cartonsLeft()>0&&!isBlocked?
+        '<button class="btn brb fk" style="padding:16px 44px;border-radius:99px;font-size:21px" onclick="openReg()">🎱 ¡Reservar mi Cartón!</button>':
+        '');
+  }else{
+    var p=G.me,mode=curMode();
+    var pats=p.cards.map(function(c){return dw(c,G.called,mode);});
+    var aw=pats.some(function(x){return x;});
+    var ch='<div style="display:flex;flex-wrap:wrap;gap:14px">';
+    p.cards.forEach(function(c,i){ch+=bCard(c,G.called,p.cards.length>1?'Cartón '+(i+1):null,!!pats[i],pats[i],mode);});
+    ch+='</div>';
+    var wb=aw?'<div style="background:linear-gradient(135deg,#D4A017,#FB8C00);border-radius:12px;padding:8px 16px;border:2px solid #8B1A1A"><p style="color:#fff;font-weight:900">🏆 '+pats.find(function(x){return x;})+'</p></div>':'';
+    pr.innerHTML=
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'+
+      '<div><h2 class="fk rbow" style="font-size:22px">Mis Cartones</h2>'+
+      '<p style="color:#8B5E00;font-size:12px;font-weight:700">👤 '+p.name+' — '+p.cards.length+' cartón'+(p.cards.length>1?'es':'')+'</p></div>'+wb+'</div>'+
+      ch+(!isBlocked?'<button style="margin-top:14px;padding:7px 18px;border-radius:10px;background:#FFFAF0;border:2px solid #E8C870;color:#5C2800;font-size:12px;cursor:pointer;font-weight:800" onclick="G.me=null;localStorage.removeItem(\'bso_phone\');renderPlayer()">↩ Cambiar jugador</button>':'');
+  }
+  upBadges();
+}
+
+function renderAdmin(){
+  var tEl=document.getElementById('aTomb');if(tEl)tEl.innerHTML=bTomb();
+  var alEl=document.getElementById('aLeft');if(alEl)alEl.innerHTML=bAdmin();
+  var rlEl=document.getElementById('aRefs');if(rlEl)rlEl.innerHTML=bRefs();
+  var hiEl=document.getElementById('aHistory');if(hiEl)hiEl.innerHTML=bHistory();
+  upBadges();
+}
+function renderBoth(){
+  if(G.role==='player')renderPlayer();
+  else if(G.role==='admin')renderAdmin();
+}
+
+
+// ── IMAGE PREVIEW ─────────────────────────────────────────
+function previewImg(input){
+  if(!input.files||!input.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var prev=document.getElementById('imgPreview');
+    var lbl=document.getElementById('imgLabel');
+    if(prev){prev.src=e.target.result;prev.style.display='block';}
+    if(lbl)lbl.textContent='✅ Comprobante adjunto';
+    document.getElementById('imgDropArea').style.background='#E8F5E9';
+    document.getElementById('imgDropArea').style.borderColor='#43A047';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function handleImgDrop(e){
+  e.preventDefault();
+  var files=e.dataTransfer.files;
+  if(!files||!files[0])return;
+  var input=document.getElementById('rImg');
+  input.files=files;
+  previewImg(input);
+}
+
+// ── RESERVATION TIMER ─────────────────────────────────────
+// Solo visual: la reserva permanece pendiente hasta decisión manual.
+var regTimerInt=null;
+var regTimerSecs=0;
+function startRegTimer(){
+  clearInterval(regTimerInt);
+  var el=document.getElementById('regTimer');
+  if(el){ el.textContent='PENDIENTE'; el.style.color='#8B5E00'; }
+}
+
+// ── REF DUPLICATE CHECK ──────────────────────────────────
+function refAlreadyUsed(rf){
+  return G.refs.some(function(r){
+    return r.rf===rf&&r.st!=='rechazado'&&r.st!=='expirado';
+  });
+}
+
+// ── PHONE DUPLICATE CHECK ─────────────────────────────────
+function phoneAlreadyUsed(pmPh){
+  var clean=pmPh.replace(/\D/g,'');
+  return G.refs.some(function(r){
+    return (r.pm||'').replace(/\D/g,'')===clean&&r.st!=='rechazado'&&r.st!=='expirado';
+  });
+}
+
+// ── AMOUNT VALIDATION ─────────────────────────────────────
+function matchMonto(declarado,esperado){
+  if(declarado==null||isNaN(declarado))return null;
+  return Math.abs(declarado-esperado)<=1; // tolerancia 1 Bs.
+}
+function validateMonto(monto,qty){
+  var expected=qty*G.priceBs;
+  var diff=Math.abs(monto-expected);
+  return diff<=1; // tolerancia 1 Bs.
+}
+
+// ── INIT ─────────────────────────────────────────────────
+G.pool=sh(Array.from({length:75},function(_,i){return i+1;}));
+loadVoices();
+checkRoute();
+initApp();
+
+// ── INSTALAR APP (PWA) ────────────────────────────────────
+var _deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _deferredInstallPrompt=e;
+  var btn=document.getElementById('btnInstalarApp');
+  if(btn)btn.style.display='block';
+});
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent);}
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}
+async function instalarApp(){
+  if(_deferredInstallPrompt){
+    _deferredInstallPrompt.prompt();
+    await _deferredInstallPrompt.userChoice;
+    _deferredInstallPrompt=null;
+    var btn=document.getElementById('btnInstalarApp');if(btn)btn.style.display='none';
+    return;
+  }
+  // Safari/iOS y navegadores sin soporte de instalación automática: mostrar instrucciones
+  var c=document.getElementById('installModContent');
+  if(isIOS()){
+    c.innerHTML='<h3 class="fk" style="color:#8B1A1A;margin-bottom:10px">📲 Instalar en iPhone/iPad</h3>'+
+      '<p style="font-size:14px;line-height:1.7;color:#5C2800">'+
+      '1. Toca el botón <b>Compartir</b> ⬆️ (abajo o arriba de Safari)<br>'+
+      '2. Baja y elige <b>"Agregar a Inicio"</b><br>'+
+      '3. Toca <b>"Agregar"</b> arriba a la derecha</p>';
+  }else{
+    c.innerHTML='<h3 class="fk" style="color:#8B1A1A;margin-bottom:10px">📲 Instalar la app</h3>'+
+      '<p style="font-size:14px;line-height:1.7;color:#5C2800">'+
+      'Abre el menú de tu navegador (⋮ o •••) y busca <b>"Instalar app"</b> o <b>"Agregar a pantalla de inicio"</b>.</p>';
+  }
+  document.getElementById('installMod').style.display='flex';
+}
+if(!isStandalone()&&'serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+  // iOS Safari nunca dispara beforeinstallprompt: mostramos el botón igual para que vean las instrucciones
+  if(isIOS()){
+    var btn=document.getElementById('btnInstalarApp');
+    if(btn)btn.style.display='block';
+  }
+}
+</script>
+</body>
+</html>

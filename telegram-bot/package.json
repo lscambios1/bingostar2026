@@ -1,0 +1,17 @@
+{
+  "name": "bingo-star-online-bot",
+  "version": "1.0.0",
+  "description": "Bot de Telegram para Bingo Star Online: avisa en privado al admin cuando alguien paga, con referencia y foto del comprobante.",
+  "main": "bot.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
