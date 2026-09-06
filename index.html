@@ -1293,17 +1293,13 @@ function bAdmin(){
     '</div>'+
 
     '<div class="card"><div class="stitle">📢 Telegram</div>'+
-    '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:8px">El bot vive en el grupo/canal de Telegram y anuncia el inicio, canta los números en vivo y publica al ganador.</p>'+
-    '<label class="lbl">Chat ID del grupo/canal</label>'+
-    '<input class="inp" id="tgChatId" value="'+(G.telegram.chatId||'')+'" placeholder="-1001234567890" onchange="saveTelegramConfig()"/>'+
-    '<label class="lbl">Avisar "comienza en X minutos" (separados por coma)</label>'+
-    '<input class="inp" id="tgMinutos" value="'+G.telegram.minutosAviso.join(',')+'" placeholder="30,10,5" onchange="saveTelegramConfig()"/>'+
-    '<label class="lbl">Hora programada del próximo bingo (opcional)</label>'+
-    '<input class="inp" type="datetime-local" id="tgHora" value="'+(G.horaInicioProg?new Date(G.horaInicioProg).toISOString().slice(0,16):'')+'" onchange="saveHoraInicio()"/>'+
-    '<div style="display:flex;align-items:center;gap:8px;margin:6px 0 10px">'+
+    '<p style="color:#8B5E00;font-size:12px;font-weight:700;margin-bottom:8px">El bot te avisa a TI, en privado (no a un grupo), cada vez que alguien pague: nombre, referencia, monto, banco y si coincide con las cartas.</p>'+
+    '<label class="lbl">Tu Chat ID (privado)</label>'+
+    '<input class="inp" id="tgChatId" value="'+(G.telegram.chatId||'')+'" placeholder="123456789" onchange="saveTelegramConfig()"/>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin:10px 0 10px">'+
     '<span class="tog" style="background:'+(G.telegram.activo?'#43A047':'#C8A060')+'" onclick="toggleTelegramActivo()"><span class="togdot" style="left:'+(G.telegram.activo?'26px':'2px')+'"></span></span>'+
     '<span style="font-size:12px;font-weight:800;color:#5C2800">Notificaciones activas</span></div>'+
-    '<p style="font-size:11px;color:#8B5E00">📖 Cómo obtener el Chat ID y desplegar el bot: revisa el README del proyecto <b>telegram-bot</b>.</p></div>'+
+    '<p style="font-size:11px;color:#8B5E00">📖 Cómo obtener tu Chat ID: háblale al bot por privado y escríbele /chatid. Cómo desplegar el bot: revisa el README del proyecto <b>telegram-bot</b>.</p></div>'+
 
     '<button class="btn bg fk" style="width:100%;padding:16px;font-size:16px;border-radius:14px;margin:6px 0 18px" onclick="saveAllSettings()">💾 Guardar todos los cambios</button>'+
 
@@ -1444,10 +1440,8 @@ function savePmConfig(){
 function saveTelegramConfig(){
   if(!sb)return;
   var chatId=document.getElementById('tgChatId').value.trim();
-  var minutos=document.getElementById('tgMinutos').value.split(',').map(function(s){return parseInt(s.trim());}).filter(function(n){return !isNaN(n);});
-  if(!minutos.length)minutos=[30,10,5];
-  G.telegram.chatId=chatId;G.telegram.minutosAviso=minutos;
-  sb.from('telegram_config').update({chat_id:chatId,minutos_aviso:minutos}).eq('id',1);
+  G.telegram.chatId=chatId;
+  sb.from('telegram_config').update({chat_id:chatId}).eq('id',1);
   noticeA('📢 Configuración de Telegram guardada','#2E7D32');
 }
 function saveHoraInicio(){
@@ -1482,15 +1476,10 @@ async function saveAllSettings(){
       await sb.from('rondas').update({nombre:r.name,modo:r.mode}).eq('id',r.id);
     }
     // Telegram
-    var chatIdEl=document.getElementById('tgChatId'), minEl=document.getElementById('tgMinutos'), horaEl=document.getElementById('tgHora');
+    var chatIdEl=document.getElementById('tgChatId');
     var chatId=chatIdEl?chatIdEl.value.trim():G.telegram.chatId;
-    var minutos=minEl?minEl.value.split(',').map(function(s){return parseInt(s.trim());}).filter(function(n){return !isNaN(n);}):G.telegram.minutosAviso;
-    if(!minutos.length)minutos=[30,10,5];
-    G.telegram.chatId=chatId;G.telegram.minutosAviso=minutos;
-    await sb.from('telegram_config').update({chat_id:chatId,minutos_aviso:minutos,activo:G.telegram.activo}).eq('id',1);
-    var iso=(horaEl&&horaEl.value)?new Date(horaEl.value).toISOString():null;
-    G.horaInicioProg=iso;
-    await sb.from('partidas').update({hora_inicio_prog:iso}).eq('id',G.partidaId);
+    G.telegram.chatId=chatId;
+    await sb.from('telegram_config').update({chat_id:chatId,activo:G.telegram.activo}).eq('id',1);
 
     noticeA('💾 ¡Todos los cambios fueron guardados!','#2E7D32');
     renderBoth();
