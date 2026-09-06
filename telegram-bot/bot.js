@@ -52,6 +52,11 @@ async function getPartidaActiva(){
   return data;
 }
 
+async function getBancoReceptor(){
+  const { data } = await sb.from('configuracion').select('pm_banco').eq('id',1).maybeSingle();
+  return (data && data.pm_banco) || '—';
+}
+
 async function sendMsg(chatId, text){
   if(!chatId) return;
   try{ await bot.sendMessage(chatId, text, { parse_mode:'HTML' }); }
@@ -78,19 +83,20 @@ async function checkPagos(){
       .eq('partida_id', partida.id).gt('created_at', lastDepositoTs).order('created_at');
 
     if(compras && compras.length){
+      const banco = await getBancoReceptor();
       for(const d of compras){
         const hora = new Date(d.created_at).toLocaleTimeString('es-VE', { hour:'2-digit', minute:'2-digit' });
         const esperado = parseFloat(d.monto_bs);
         const declarado = d.monto_declarado != null ? parseFloat(d.monto_declarado) : null;
-        let veredicto = '⚠️ No indicó el monto pagado — revisar manualmente';
+        let coincide = '⚠️ No indicó el monto — revisar manualmente';
         if(declarado != null){
           const cuadra = Math.abs(declarado - esperado) <= 1; // tolerancia 1 Bs.
-          veredicto = cuadra
-            ? `✅ El monto pagado coincide con lo esperado (${fBs(esperado)}) — igual verifica en el banco`
-            : `❌ El monto pagado NO coincide (esperado ${fBs(esperado)}) — revisar`;
+          coincide = cuadra
+            ? `✅ Coincide con las ${d.cantidad_cartones} cartones`
+            : `❌ NO coincide con las ${d.cantidad_cartones} cartones (esperado ${fBs(esperado)})`;
         }
         await sendMsg(chatId,
-          `🧾 <b>Nuevo pago recibido</b>\n👤 ${d.nombre}\n📱 ${d.celular}\n🃏 Cartones: <b>${d.cantidad_cartones}</b>\n💵 Pagó: <b>${declarado != null ? fBs(declarado) : '—'}</b>\n🔢 Referencia: <code>${d.referencia}</code>\n🕐 Hora: ${hora}\n${veredicto}`);
+          `🧾 <b>Nuevo pago</b>\n👤 ${d.nombre}\n🔢 Referencia: <code>${d.referencia}</code>\n💵 Monto: <b>${declarado != null ? fBs(declarado) : '—'}</b>\n🏦 Banco: ${banco}\n${coincide}\n🕐 Hora: ${hora}`);
 
         // ── reenviar la foto del comprobante, si adjuntó una ──
         if(d.comprobante_url){
